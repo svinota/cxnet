@@ -81,7 +81,10 @@ def hline(msg,size=0):
         ptr += 1
 
     if line:
-        result += "\t\t\t\t %s\n" % (str(line))
+        align = (( offset + 15 ) & ~ 15) - offset
+        for i in xrange(align):
+            result += "   "
+        result += ":\t %s\n" % (str(line))
     return result
 
 
