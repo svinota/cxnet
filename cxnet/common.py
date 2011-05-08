@@ -83,6 +83,8 @@ def hline(msg,size=0):
     if line:
         align = (( offset + 15 ) & ~ 15) - offset
         for i in xrange(align):
+            if (not (offset + i) % 8) and (result[-2] != ":"):
+                result += ": "
             result += "   "
         result += ":\t %s\n" % (str(line))
     return result
