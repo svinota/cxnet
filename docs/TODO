@@ -1,0 +1,40 @@
+
+1. start the docs, damn it!
+2. port zeroconf.py from 0.6.0
+3. write samples for all protocols
+
+
+package refactoring checklist
+
+header      copyright notice
+docstring   shor package description
+spaces      ident with spaces only checked (4 spaces per tab)
+camelcase   CamelCase fixed to python_standard
+__main__    direct running support (with a sample)
+docs        documentation added
+s/a         work stand-alone, w/o 0.6.0 connexion framework
+2.5,2.6,3.0 Python version tested
+
+
+                 fixed:         header  docstring   spaces  camelcase   __main__    docs    s/a     2.5     2.6     3.0
+    netlink.generic.py          +       +           +       +           -           -       +       -       +       -
+    netlink.genetlink.py        +       +           +       +           -           -       +       -       +       -
+    netlink.__init__.py         +       -           +       +           n/a         -       +       -       +       -
+    netlink.ipq.py              +       +           +       +           -           -       +       -       +       -
+    netlink.iproute2.py         +       +           +       +           +           -       +       -       +       -
+    netlink.rtnl.py             +       +           +       +           -           -       +       -       +       -
+    netlink.taskstats.py        +       +           +       +           +           -       +       -       +       -
+    arp.py                      +       +           +       +           -           -       +       +       +       -
+    common.py                   +       +           +       +           -           -       +       -       +       -
+    ether.py                    +       +           +       +           -           -       +       +       +       -
+    generic.py                  +       +           +       -           -           -       +       +       +       -
+    __init__.py                 +       -           +       +           -           -       +       -       +       -
+    ip4.py                      +       +           +       -           -           -       +       +       +       -
+    libpcap.py                  +       +           +       +           -           -       +       +       -       -
+    tcp.py                      +       +           +       -           -           -       +       +       -       -
+    utils.py                    +       +           +       -           -           -       +       +       +       -
+    zeroconf.py*                +       +           +       -           -**         -       -       +       -       -
+
+*)  zeroconf.py is not ported yet
+**) actually, __main__ handler is, but doesn't work
+

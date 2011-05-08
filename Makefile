@@ -1,4 +1,4 @@
-# 	Copyright (c) 2008 Peter V. Saveliev
+# 	Copyright (c) 2008-2011 Peter V. Saveliev
 #
 # 	This file is part of Connexion project.
 #
