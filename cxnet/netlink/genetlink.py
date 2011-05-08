@@ -87,9 +87,10 @@ CTRL_ATTR_MCAST_GRP_ID      = 0x2
 
 class genl_socket(nl_socket):
 
+    msg = genlmsg
+
     def get_protocol_id(self,name):
-        (l,r) = self.send_cmd(GENL_ID_CTRL,CTRL_CMD_GETFAMILY,CTRL_ATTR_FAMILY_NAME,create_string_buffer(name))
-        msg = genlmsg.from_address(addressof(r))
+        (l,msg) = self.send_cmd(GENL_ID_CTRL,CTRL_CMD_GETFAMILY,CTRL_ATTR_FAMILY_NAME,create_string_buffer(name))
         name = nlattr.from_address(addressof(msg.data))
         prid = nlattr.from_address(addressof(msg.data) + NLMSG_ALIGN(name.nla_len))
         assert prid.nla_type == CTRL_ATTR_FAMILY_ID
@@ -105,7 +106,5 @@ class genl_socket(nl_socket):
         msg.genlmsghdr.version = 0x1
         msg.set_attr(nla_type,nla_data)
         self.send(msg,msg.size())
-        (l,r) = self.recv()
-        msg = genlmsg.from_address(addressof(r))
-        return (l,msg)
+        return  self.recv()
 
