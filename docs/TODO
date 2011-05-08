@@ -13,22 +13,22 @@ camelcase   CamelCase fixed to python_standard
 __main__    direct running support (with a sample)
 docs        documentation added
 s/a         work stand-alone, w/o 0.6.0 connexion framework
-2.5,2.6,3.0 Python version tested
+2.5,2.6,3.0 Python version tested: +(tested);  -(not tested yet);  !(incompatible);
 
 
                  fixed:         header  docstring   spaces  camelcase   __main__    docs    s/a     2.5     2.6     3.0
-    netlink.generic.py          +       +           +       +           -           -       +       -       +       -
-    netlink.genetlink.py        +       +           +       +           -           -       +       -       +       -
-    netlink.__init__.py         +       -           +       +           n/a         -       +       -       +       -
-    netlink.ipq.py              +       +           +       +           -           -       +       -       +       -
-    netlink.iproute2.py         +       +           +       +           +           -       +       -       +       -
-    netlink.rtnl.py             +       +           +       +           -           -       +       -       +       -
-    netlink.taskstats.py        +       +           +       +           +           -       +       -       +       -
+    netlink.generic.py          +       +           +       +           -           -       +       +       +       -
+    netlink.genetlink.py        +       +           +       +           -           -       +       +       +       -
+    netlink.__init__.py         +       -           +       +           n/a         -       +       +       +       -
+    netlink.ipq.py              +       +           +       +           -           -       +       +       +       -
+    netlink.iproute2.py         +       +           +       +           +           -       +       !       +       -
+    netlink.rtnl.py             +       +           +       +           -           -       +       !       +       -
+    netlink.taskstats.py        +       +           +       +           +           -       +       +       +       -
     arp.py                      +       +           +       +           -           -       +       +       +       -
-    common.py                   +       +           +       +           -           -       +       -       +       -
+    common.py                   +       +           +       +           -           -       +       +       +       -
     ether.py                    +       +           +       +           -           -       +       +       +       -
     generic.py                  +       +           +       -           -           -       +       +       +       -
-    __init__.py                 +       -           +       +           -           -       +       -       +       -
+    __init__.py                 +       -           +       +           -           -       +       +       +       -
     ip4.py                      +       +           +       -           -           -       +       +       +       -
     libpcap.py                  +       +           +       +           -           -       +       +       -       -
     tcp.py                      +       +           +       -           -           -       +       +       -       -
