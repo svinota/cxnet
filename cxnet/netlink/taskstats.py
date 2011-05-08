@@ -245,4 +245,4 @@ if __name__ == "__main__":
     print("Running task accounting (task is not finished yet!):\n")
     [ stats.pprint(s) for s in ("ac_comm","ac_uid","ac_gid","ac_pid","ac_ppid","ac_btime","ac_etime","ac_utime","ac_stime","read_char","write_char","read_syscalls","write_syscalls","cpu_run_real_total","cpu_run_virtual_total") ]
     print("\nraw packet dump:")
-    hprint(msg,msg.hdr.length)
+    hprint(msg,l)
