@@ -32,8 +32,8 @@ __all__ = [
 
 from ctypes import *
 
-from sys import maxint
-if maxint == 2147483647:
+from sys import maxsize
+if maxsize == 2147483647:
     cx_int = c_uint32
 else:
     cx_int = c_uint64
@@ -82,7 +82,7 @@ def hline(msg,size=0):
 
     if line:
         align = (( offset + 15 ) & ~ 15) - offset
-        for i in xrange(align):
+        for i in range(align):
             if (not (offset + i) % 8) and (result[-2] != ":"):
                 result += ": "
             result += "   "
@@ -94,7 +94,7 @@ def hprint(msg,size=0):
     """
     Dump a packet onto stdout
     """
-    print hline(msg,size)
+    print(hline(msg,size))
 
 class be16 (BigEndianStructure):
     _fields_ = [
@@ -111,7 +111,7 @@ def csum_words(msg,l):
     a = addressof(msg)
     x = 0
 
-    for i in xrange(0,l,2):
+    for i in range(0,l,2):
         c = be16.from_address(a + i)
         x += c.c
 

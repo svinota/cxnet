@@ -21,6 +21,7 @@ GeNetlink protocol
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from generic import *
+import sys
 
 GENL_NAMSIZ   = 16    # length of family name
 GENL_MIN_ID   = NLMSG_MIN_TYPE
@@ -90,7 +91,11 @@ class genl_socket(nl_socket):
     msg = genlmsg
 
     def get_protocol_id(self,name):
-        (l,msg) = self.send_cmd(GENL_ID_CTRL,CTRL_CMD_GETFAMILY,CTRL_ATTR_FAMILY_NAME,create_string_buffer(name))
+        if sys.version_info >= (3,0):
+            buf = create_string_buffer(bytes(name,"ascii"))
+        else:
+            buf = create_string_buffer(name)
+        (l,msg) = self.send_cmd(GENL_ID_CTRL,CTRL_CMD_GETFAMILY,CTRL_ATTR_FAMILY_NAME,buf)
         name = nlattr.from_address(addressof(msg.data))
         prid = nlattr.from_address(addressof(msg.data) + NLMSG_ALIGN(name.nla_len))
         assert prid.nla_type == CTRL_ATTR_FAMILY_ID

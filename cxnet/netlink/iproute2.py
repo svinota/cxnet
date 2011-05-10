@@ -53,7 +53,7 @@ from threading import Thread,enumerate
 
 token = "RT network subsystem interface"
 
-assert (2,6) <= sys.version_info < (3,0)
+assert (2,6) <= sys.version_info
 assert token not in [ x.name for x in enumerate() ]
 
 __all__ = [ "iproute2" ]
@@ -64,7 +64,10 @@ from cxnet.netlink.rtnl import *
 from cxnet.utils import dqn_to_int,get_base
 from ctypes import *
 from select import epoll,EPOLLIN
-from Queue import Queue
+try:
+    from Queue import Queue
+except:
+    from queue import Queue
 
 import os
 
@@ -351,7 +354,7 @@ class _iproute2(Thread):
         msg = rtnl_msg()
         msg.hdr.type = RTM_GETLINK
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
-        return filter(lambda x: x.has_key('dev'), filter(lambda x: x['type'] == 'link', self.query_nl(msg)))
+        return filter(lambda x: 'dev' in x.keys(), filter(lambda x: x['type'] == 'link', self.query_nl(msg)))
 
     def get_addr(self,link=None,addr=None):
         """
@@ -392,15 +395,15 @@ def print_addr(addr):
 
 def print_link(link):
     print("%-5i%s: %s mtu %i qdisc %s" % (link["index"], link["dev"], link["flags"], link["mtu"], link["qdisc"]))
-    if link.has_key("hwaddr"):
+    if "hwaddr" in link.keys():
         print("\thwaddr %-17s broadcast %-17s" % (link["hwaddr"], link["broadcast"]))
     [ print_addr(addr) for addr in iproute2.get_addr(link["dev"]) ]
     print("")
 
 def print_route(route):
     link = iproute2.get_link(int(route["output_link"]))
-    if route.has_key("dst_prefix"):
-        if route.has_key("gateway"):
+    if "dst_prefix" in route.keys():
+        if "gateway" in route.keys():
             print("%15s/%-2s via %15s dev %s" % (route["dst_prefix"], route["dst_len"], route["gateway"], link["dev"]))
         else:
             print("%15s/%-2s                     dev %s" % (route["dst_prefix"], route["dst_len"], link["dev"]))
@@ -408,7 +411,7 @@ def print_route(route):
         print("           default via %15s" % (route["gateway"]))
 
 def print_neighbor(neigh):
-    if not neigh.has_key("lladdr"):
+    if not "lladdr" in neigh.keys():
         neigh["lladdr"] = "incomplete"
     link = iproute2.get_link(int(neigh["index"]))
     print("%16s %15s %17s" % (link["dev"], neigh["dest"], neigh["lladdr"]))

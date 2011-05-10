@@ -16,23 +16,23 @@ s/a         work stand-alone, w/o 0.6.0 connexion framework
 2.5,2.6...  Python version tested: +(tested);  -(not tested yet);  !(incompatible);
 
 
-                 fixed:         header  docstring   spaces  camelcase   __main__    docs    s/a     2.5     2.6     2.7     3.0
-    netlink.generic.py          +       +           +       +           -           -       +       +       +       +       -
-    netlink.genetlink.py        +       +           +       +           -           -       +       +       +       +       -
-    netlink.__init__.py         +       -           +       +           n/a         -       +       +       +       +       -
+                 fixed:         header  docstring   spaces  camelcase   __main__    docs    s/a     2.5     2.6     2.7     3.2
+    netlink.generic.py          +       +           +       +           -           -       +       +       +       +       +
+    netlink.genetlink.py        +       +           +       +           -           -       +       +       +       +       +
+    netlink.__init__.py         +       -           +       +           n/a         -       +       +       +       +       +
     netlink.ipq.py              +       +           +       +           -           -       +       +       +       -       -
-    netlink.iproute2.py         +       +           +       +           +           -       +       !       +       +       -
-    netlink.rtnl.py             +       +           +       +           -           -       +       !       +       +       -
-    netlink.taskstats.py        +       +           +       +           +           -       +       +       +       +       -
+    netlink.iproute2.py         +       +           +       +           +           -       +       !       +       +       +
+    netlink.rtnl.py             +       +           +       +           -           -       +       !       +       +       +
+    netlink.taskstats.py        +       +           +       +           +           -       +       +       +       +       +
     arp.py                      +       +           +       +           -           -       +       +       +       -       -
-    common.py                   +       +           +       +           -           -       +       +       +       +       -
+    common.py                   +       +           +       +           -           -       +       +       +       +       +
     ether.py                    +       +           +       +           -           -       +       +       +       -       -
     generic.py                  +       +           +       -           -           -       +       +       +       -       -
     __init__.py                 +       -           +       +           -           -       +       +       +       -       -
     ip4.py                      +       +           +       -           -           -       +       +       +       -       -
     libpcap.py                  +       +           +       +           -           -       +       +       -       -       -
     tcp.py                      +       +           +       -           -           -       +       +       -       -       -
-    utils.py                    +       +           +       -           -           -       +       +       +       +       -
+    utils.py                    +       +           +       -           -           -       +       +       +       +       +
     zeroconf.py*                +       +           +       -           -**         -       -       +       -       -       -
 
 *)  zeroconf.py is not ported yet

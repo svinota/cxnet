@@ -457,7 +457,7 @@ class rtnl_msg_parser(object):
         align = (k + x - 1) & ~ (x - 1)
 
         if hdr.type in t._map_.keys():
-            if type(t._map_[hdr.type][0]) == types.TupleType:
+            if isinstance(t._map_[hdr.type][0],tuple):
                 result = t._map_[hdr.type][seen][0]().get(ptr)
                 key    = t._map_[hdr.type][seen][1]
                 seen  += 1

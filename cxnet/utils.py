@@ -32,9 +32,9 @@ __all__ = [
 ]
 
 msk = []
-for i in xrange(33):
+for i in range(33):
     a = 0
-    for k in xrange(i):
+    for k in range(i):
         a = a >> 1
         a |= 0x80000000
     msk.append(a)
@@ -123,7 +123,7 @@ def ip_range(st):
     start = 0
     stop = msk[32] & ~mask
     result = []
-    for i in xrange(start,stop + 1):
+    for i in range(start,stop + 1):
         result.append((
             hex(i),
             int_to_dqn(net | i),

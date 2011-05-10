@@ -43,7 +43,7 @@ class pcap_interface(object):
         return libp.pcap_inject(self.psock,byref(packet),size)
 
     def perror(self):
-        print string_at(addressof(self.error))
+        print(string_at(addressof(self.error)))
 
     def close(self):
         libp.pcap_close(self.psock)
