@@ -18,6 +18,9 @@
 
 __all__ = [
     "generic",
+    "genetlink",
     "ipq",
     "rtnl",
+    "iproute2",
+    "taskstats",
 ]
