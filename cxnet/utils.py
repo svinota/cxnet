@@ -29,6 +29,8 @@ __all__ = [
     "get_mask",
     "get_base",
     "ip_range",
+    "UrandomPool",
+    "PSK",
 ]
 
 msk = []
@@ -130,3 +132,74 @@ def ip_range(st):
         ))
 
     return result
+
+class UrandomPool (object):
+
+    size = None
+
+    def __init__ (self,size):
+        self.size = None
+
+    def get_bytes(self,_size = None):
+        global urandom
+        try:
+            fstat(urandom.fileno())
+        except:
+            urandom = open("/dev/urandom","r")
+
+        if _size is None:
+            size = self.size
+        else:
+            size = _size
+        return urandom.read(size)
+
+class PSK (object):
+    def __init__(self,t,bits):
+        rp = UrandomPool(bits//8)
+        self.type = t
+        self.bits = bits
+        self.psk = rp.get_bytes(self.bits//8)
+        if t == "AES":
+            self.block = 16
+        else:
+            self.block = 8
+
+    def __getstate__(self):
+        o = self.__dict__.copy()
+        if "key" in o.keys():
+            del o["key"]
+        return o
+
+    def __setstate__(self,d):
+        self.__dict__.update(d)
+        exec("from Crypto.Cipher import %s as module" % (self.type))
+        self.key = module.new(self.psk,module.MODE_CBC)
+        self.rp = RandomPool(self.bits//8)
+
+    def randomize(self):
+        while self.rp.entropy < self.bits:
+            self.rp.add_event()
+
+    def __repr__(self):
+        return "<PSK instance for %s type key (%s bits)>" % (self.type,self.bits)
+
+    def encrypt(self,s):
+        return self.key.encrypt(self.rp.get_bytes(self.block) + s)
+
+    def decrypt(self,s):
+        return self.key.decrypt(s)[self.block:]
+
+    def sign(self,h,p):
+        return self.encrypt(h)
+
+    def verify(self,h,s):
+        return self.decrypt(s) == h
+
+    def can_encrypt(self):
+        return 1
+
+    def can_sign(self):
+        return 1
+
+    def has_private(self):
+        return True
