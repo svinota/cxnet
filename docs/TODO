@@ -33,8 +33,5 @@ s/a         work stand-alone, w/o 0.6.0 connexion framework
     libpcap.py                  +       +           +       +           -           -       +       +       -       -       -
     tcp.py                      +       +           +       -           -           -       +       +       -       -       -
     utils.py                    +       +           +       -           -           -       +       +       +       +       +
-    zeroconf.py*                +       +           +       -           -**         -       -       +       -       -       -
-
-*)  zeroconf.py is not ported yet
-**) actually, __main__ handler is, but doesn't work
+    zeroconf.py                 +       +           +       +           +           -       +       +       +       +       !
 
