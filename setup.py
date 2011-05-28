@@ -5,7 +5,7 @@ from distutils.core import setup
 setup(
 	name="cxnet",
 	version="0.7.1",
-	url="http://www.radlinux.org/connexion/",
+	url="http://projects.radlinux.org/cx/",
 	author="Peter V. Saveliev",
 	author_email="peet@altlinux.org",
 	license="GPL",
