@@ -33,22 +33,17 @@ all:
 	@echo targets: dist, install
 
 clean:
-	@rm -rf dist build MANIFEST
-	@find . -name "*pyc" -exec rm -f "{}" \;
+	rm -rf dist build MANIFEST
+	find . -name "*pyc" -exec rm -f "{}" \;
 
 manifest: clean
-	@echo "update manifest"
-	@find . ! -name setup.py -a ! -name Makefile -a ! -wholename '*.svn*' -a ! -name 'dump' >MANIFEST
+	find . ! -name setup.py -a ! -name Makefile -a ! -wholename '*.svn*' -a ! -name 'dump' >MANIFEST
 
 dist: manifest
 	${python} setup.py sdist
 
-build: manifest
-	@echo -n "build `pwd` ... "
-	@${python} setup.py build ${root} ${lib} >/dev/null 2>&1
-	@echo "done"
+build:
+	:
 
 install: manifest
-	@echo -n "install `pwd` ... "
-	@${python} setup.py install ${root} ${lib} >/dev/null 2>&1
-	@echo "done"
+	${python} setup.py install ${root} ${lib}
