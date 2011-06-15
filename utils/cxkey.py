@@ -21,6 +21,8 @@
 import sys
 from getopt import getopt
 from Crypto import Random
+from pickle import loads,dumps
+from base64 import b64encode,b64decode
 
 
 mode = "create"
@@ -41,7 +43,7 @@ Options:
     -h              print this help
 
     -m <mode>       %15s      operation mode (create, list)
-    -t <type>       %15s      key type (DSA,RSA,ElGamal,psk+AES)
+    -t <type>       %15s      key type (DSA,RSA,ElGamal)
     -b <bits>       %15s      key size (int)
     -f <base>       %15s      filename base for keys
 """ % (mode,keytype,bits,base)
@@ -51,6 +53,10 @@ try:
     (opts,left) = getopt(sys.argv[1:],"m:t:b:f:h")
 except Exception, e:
     print(e, __doc__)
+    sys.exit(255)
+
+if not len(opts):
+    print(__doc__)
     sys.exit(255)
 
 for (i,k) in opts:
@@ -67,35 +73,19 @@ for (i,k) in opts:
         base = k
 
 
-if keytype[:4] == "psk+":
-    keytype = keytype[4:]
-    policy = "psk"
-else:
-    policy = "pks"
-    exec("from Crypto.PublicKey import %s as module" % (keytype))
-
-if policy == "pks":
-    key = module.generate(bits, Random.get_random_bytes)
-else:
-    from cxutil.utils import PSK
-    key = PSK(keytype,bits)
-
+exec("from Crypto.PublicKey import %s as module" % (keytype))
+key = module.generate(bits, Random.get_random_bytes)
 
 if mode == "create":
     prk = open("%s.private" % (base),fmode[mode])
-    from pickle import dumps
-    from base64 import b64encode
     s = dumps(key)
     prk.write(b64encode(s))
-    if policy == "pks":
-        puk = open("%s.public" % (base),fmode[mode])
-        s = dumps(key.publickey())
-        puk.write(b64encode(s))
+    puk = open("%s.public" % (base),fmode[mode])
+    s = dumps(key.publickey())
+    puk.write(b64encode(s))
 
 elif mode == "list":
-    from pickle import loads
-    from base64 import b64decode
     prk = open("%s" % (base),fmode[mode])
     s = loads(b64decode(prk.read()))
-    print "key repr:",repr(s)
-    print "key properties:\n\tcan encrypt:\t%s\n\tcan sign:\t%s\n\tprivate key:\t%s" % (s.can_encrypt(),s.can_sign(),s.has_private())
+    print("key repr:",repr(s))
+    print("key properties:\n\tcan encrypt:\t%s\n\tcan sign:\t%s\n\tprivate key:\t%s" % (s.can_encrypt(),s.can_sign(),s.has_private()))
