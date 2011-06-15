@@ -13,4 +13,7 @@ setup(
         "cxnet",
         "cxnet.netlink",
     ],
+    scripts=[
+        "utils/cxkey",
+    ]
 )
