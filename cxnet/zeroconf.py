@@ -38,12 +38,12 @@ import threading
 import traceback
 import types
 
-from Crypto.Hash import MD5
 from pickle import dumps, loads
 from base64 import b64encode, b64decode
 from threading import Thread
-from cxnet.utils import UrandomPool as RandomPool
+from Crypto.Hash import MD5
 from Crypto.Util.number import getPrime
+from Crypto import Random
 
 # py3k
 
@@ -246,11 +246,8 @@ def text_to_dict(text):
     return result
 
 
-RPSIZE = 1024
-__rp = RandomPool(RPSIZE)
-
 def prime(size=140):
-    return getPrime(size,__rp.get_bytes)
+    return getPrime(size,Random.get_random_bytes)
 
 
 # Exceptions
