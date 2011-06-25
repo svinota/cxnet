@@ -223,26 +223,39 @@ if __name__ == "__main__":
     # 1. get TASKSTATS protocol id
     #
     s = genl_socket()
-    prid = s.get_protocol_id("TASKSTATS")
+    prid = s.get_protocol_id("TASKSTATS").value
     ###
     #
     # 2. get TASKSTATS structure for a pid or for own process
     #
-    try:
-        import sys
-        pid = int(sys.argv[1])
-    except:
+
+    import sys
+    pid = None
+    mask = None
+
+    if len(sys.argv) > 1:
+        try:
+            pid = int(sys.argv[1])
+        except:
+            mask = sys.argv[1][1:]
+    else:
         import os
         pid = os.getpid()
 
-    (l,msg) = s.send_cmd(prid,TASKSTATS_CMD_GET,TASKSTATS_TYPE_PID,c_uint32(pid))
+
+    if pid:
+        (l,msg) = s.send_cmd(prid,TASKSTATS_CMD_GET,TASKSTATS_CMD_ATTR_PID,c_uint32(pid))
+    if mask:
+        print "PRID: %x" % (prid)
+        (l,msg) = s.send_cmd(prid,TASKSTATS_CMD_GET,TASKSTATS_CMD_ATTR_REGISTER_CPUMASK,create_string_buffer(mask,8))
     a = nlattr.from_address(addressof(msg.data))
     assert a.nla_type == TASKSTATS_TYPE_AGGR_PID
     pid = nlattr.from_address(addressof(msg.data) + sizeof(a))
     assert pid.nla_type == TASKSTATS_TYPE_PID
     stats = taskstatsmsg.from_address(addressof(msg.data) + sizeof(a) + NLMSG_ALIGN(pid.nla_len) + sizeof(nlattr))
 
-    print("Running task accounting (task is not finished yet!):\n")
-    [ stats.pprint(s) for s in ("ac_comm","ac_uid","ac_gid","ac_pid","ac_ppid","ac_btime","ac_etime","ac_utime","ac_stime","read_char","write_char","read_syscalls","write_syscalls","cpu_run_real_total","cpu_run_virtual_total") ]
+    # print("Running task accounting (task is not finished yet!):\n")
+    # [ stats.pprint(s) for s in ("ac_comm","ac_uid","ac_gid","ac_pid","ac_ppid","ac_btime","ac_etime","ac_utime","ac_stime","read_char","write_char","read_syscalls","write_syscalls","cpu_run_real_total","cpu_run_virtual_total") ]
+    [ stats.pprint(s) for s in sorted(stats.descriptions.keys()) ]
     print("\nraw packet dump:")
     hprint(msg,l)
