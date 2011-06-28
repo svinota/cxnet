@@ -190,9 +190,16 @@ class taskstatsmsg(Structure):
         "cpu_scaled_run_real_total":"Scaled cpu_run_real_total",
     }
 
-    def pprint(self,attr):
-        print("%-26s%-32s%s" % (attr,getattr(self,attr),self.descriptions[attr]))
+    def pprint(self,attr=None):
+        print(self.sprint(attr))
 
+    def sprint(self,attr=None):
+        if attr:
+            return "%-26s%-32s%s" % (attr,getattr(self,attr),self.descriptions[attr])
+        else:
+            s = ""
+            [ "\n".join(s,self.sprint(x)) for x in sorted(self.descriptions.keys()) ]
+            return s
 #
 # Commands sent from userspace
 # Not versioned.
