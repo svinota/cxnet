@@ -99,7 +99,7 @@ class genl_socket(nl_socket):
         name = nlattr.from_address(addressof(msg.data))
         prid = nlattr.from_address(addressof(msg.data) + NLMSG_ALIGN(name.nla_len))
         assert prid.nla_type == CTRL_ATTR_FAMILY_ID
-        return c_uint16.from_address(addressof(prid) + sizeof(prid))
+        return c_uint16.from_address(addressof(prid) + sizeof(prid)).value
 
 
     def send_cmd(self,prid,cmd,nla_type,nla_data):
