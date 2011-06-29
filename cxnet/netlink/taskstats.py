@@ -194,11 +194,12 @@ class taskstatsmsg(Structure):
         print(self.sprint(attr))
 
     def sprint(self,attr=None):
-        if attr:
+        if attr is not None:
             return "%-26s%-32s%s" % (attr,getattr(self,attr),self.descriptions[attr])
         else:
             s = ""
-            [ "\n".join(s,self.sprint(x)) for x in sorted(self.descriptions.keys()) ]
+            for x in sorted(self.descriptions.keys()):
+                s += "%s\n" % (self.sprint(x))
             return s
 #
 # Commands sent from userspace
@@ -230,7 +231,7 @@ if __name__ == "__main__":
     # 1. get TASKSTATS protocol id
     #
     s = genl_socket()
-    prid = s.get_protocol_id("TASKSTATS").value
+    prid = s.get_protocol_id("TASKSTATS")
     ###
     #
     # 2. get TASKSTATS structure for a pid or for own process
@@ -261,8 +262,7 @@ if __name__ == "__main__":
     assert pid.nla_type == TASKSTATS_TYPE_PID
     stats = taskstatsmsg.from_address(addressof(msg.data) + sizeof(a) + NLMSG_ALIGN(pid.nla_len) + sizeof(nlattr))
 
-    # print("Running task accounting (task is not finished yet!):\n")
-    # [ stats.pprint(s) for s in ("ac_comm","ac_uid","ac_gid","ac_pid","ac_ppid","ac_btime","ac_etime","ac_utime","ac_stime","read_char","write_char","read_syscalls","write_syscalls","cpu_run_real_total","cpu_run_virtual_total") ]
-    [ stats.pprint(s) for s in sorted(stats.descriptions.keys()) ]
+    stats.pprint()
+
     print("\nraw packet dump:")
     hprint(msg,l)
