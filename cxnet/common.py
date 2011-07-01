@@ -40,6 +40,10 @@ else:
 
 libc = CDLL("libc.so.6")
 
+
+class NotImplemented(Exception):
+    pass
+
 def hdump(name,msg,size=0):
     """
     Dump a packet into a file
