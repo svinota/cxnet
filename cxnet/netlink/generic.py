@@ -123,6 +123,9 @@ class attr_msg(object):
     def size(self):
         return self.__offset - addressof(self)
 
+    def set_offset(self,offset):
+        self.__offset = offset
+
     def set_attr(self,typ,obj):
         class attr(Structure):
             pass
@@ -148,6 +151,7 @@ class attr_msg(object):
         a.data = obj.value
 
         self.__offset += sizeof(a)
+        self.hdr.length = self.__offset - addressof(self.hdr)
 
 class nlmsg(Structure,attr_msg):
     """
