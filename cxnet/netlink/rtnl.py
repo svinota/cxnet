@@ -522,6 +522,7 @@ class rtnl_msg_parser(object):
             t <= RTM_DELADDR:
             r["type"] = "address"
             r["mask"] = msg.data.address.prefixlen
+            r["index"] = msg.data.address.index
             bias = ifaddrmsg
             at = ifa_attr()
         elif \
