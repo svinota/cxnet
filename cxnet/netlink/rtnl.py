@@ -480,11 +480,15 @@ class rtnl_msg_parser(object):
         elif \
             t <= RTM_DELADDR:
                 if len(p["local"].split(".")) == 4:
+                    # FIXME! must NOT be hardcoded
                     msg.data.address.family = 0x2
                 else:
                     raise NotImplemented()
                 msg.data.address.prefixlen = p["mask"]
                 msg.data.address.index = p["index"]
+                if not p.has_key("scope") and p["address"][:3] == "127":
+                    # FIXME! must NOT be hardcoded
+                    msg.data.address.scope = 0xfe
                 bias = ifaddrmsg
                 at = ifa_attr()
         else:
