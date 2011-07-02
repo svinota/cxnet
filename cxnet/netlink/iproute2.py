@@ -60,8 +60,9 @@ __all__ = [ "iproute2" ]
 #
 #
 #
+from cxnet.common import NotImplemented
 from cxnet.netlink.rtnl import *
-from cxnet.utils import dqn_to_int,get_base
+from cxnet.utils import dqn_to_int,get_base,get_short_mask
 from ctypes import *
 from select import epoll,EPOLLIN
 try:
@@ -355,6 +356,39 @@ class _iproute2(Thread):
         msg.hdr.type = RTM_GETLINK
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
         return filter(lambda x: 'dev' in x.keys(), filter(lambda x: x['type'] == 'link', self.query_nl(msg)))
+
+
+    def add_addr(self,link,addr):
+        return self._del_add_addr(link,addr,"add")
+
+    def del_addr(self,link,add):
+        return self._del_add_addr(link,addr,"del")
+
+    def _del_add_addr(self,link,addr,action):
+        """
+        Add or delete an address to/from an interface
+        """
+        # get interface
+        if isinstance(link,str):
+            key = self.get_link(link)["index"]
+        elif isinstance(link,int):
+            key = link
+        else:
+            raise NotImplemented()
+
+        ad = addr.split("/")
+        request = {
+            "index": key,
+            "action": action,
+            "type": "address",
+            "mask": get_short_mask(addr),
+            "address": ad[0],
+            "local": ad[0],
+        }
+        msg = self.parser.create(request)
+        msg.hdr.flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL
+        return self.query_nl(msg)
+
 
     def get_addr(self,link=None,addr=None):
         """
