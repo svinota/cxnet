@@ -88,6 +88,20 @@ def mask_unknown(st):
             c.append(mask)
     return c[-1]
 
+def get_short_mask(st):
+    """
+    Return short int mask in form /xx
+    """
+    st = st.split("/")
+    if len(st) > 1:
+        mask = st[1]
+        if mask.find(".") > 0:
+            mask = msk.index(dqn_to_int(mask))
+    else:
+        mask = mask_unknown(st[0])
+
+    return int(mask)
+
 def get_mask(st):
     """
     Return int mask for IP
