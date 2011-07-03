@@ -48,6 +48,7 @@ iproute2.get_link("eth2")
 #   ...
 #
 import sys
+import time
 from threading import Thread,enumerate
 
 
@@ -181,7 +182,7 @@ class _iproute2(Thread):
                             key = 0
 
                         # enqueue message into appropriate decoder queue
-                        self.listeners[key].put((l,msg))
+                        self.listeners[key].put((time.asctime(),l,msg))
 
                 except:
                     pass
@@ -223,12 +224,14 @@ class _iproute2(Thread):
                 if not blocking:
                     break
 
-            (l,msg) = self.listeners[key].get()
+            (t,l,msg) = self.listeners[key].get()
             while l > 0:
                 x = rtnl_msg.from_address(addressof(msg) + bias)
                 bias += x.hdr.length
                 l -= x.hdr.length
                 parsed = self.parser.parse(x)
+                if isinstance(parsed,dict):
+                    parsed["timestamp"] = t
                 result.append(parsed)
                 if not ((x.hdr.type > NLMSG_DONE) and (x.hdr.flags & NLM_F_MULTI)):
                     end = True
