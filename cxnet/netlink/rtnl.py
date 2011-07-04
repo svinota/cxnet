@@ -481,12 +481,13 @@ class rtnl_msg_parser(object):
 
         msg.set_offset(addressof(msg) + sizeof(nlmsghdr) + sizeof(bias))
 
-        while True:
-            ret = msg.get_attr(at)
-            if ret is None:
-                break
-            if ret[0] is not None:
-                r[ret[0]] = ret[1]
+        try:
+            while True:
+                ret = msg.get_attr(at)
+                if ret is not None:
+                    r[ret[0]] = ret[1]
+        except:
+            pass
 
         if "dev" in r.keys():
             ###

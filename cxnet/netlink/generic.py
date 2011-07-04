@@ -131,17 +131,16 @@ class attr_msg(object):
 
     def get_attr(self,type_map):
 
-        if self.__offset >= addressof(self) + self.hdr.length:
-            return None
+        assert self.__offset < addressof(self) + self.hdr.length
 
         hdr = nlattr.from_address(self.__offset)
         ptr = self.__offset
         self.__offset += NLMSG_ALIGN(hdr.nla_len)
 
-        try:
+        if type_map.has_key(hdr.nla_type):
             return (type_map[hdr.nla_type][1],type_map[hdr.nla_type][0](ptr))
-        except KeyError:
-            return (None,None)
+        else:
+            return None
 
 
     def set_attr(self,typ,obj):
