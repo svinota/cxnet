@@ -251,7 +251,7 @@ class _iproute2(Thread):
             cache_key = string_at(addressof(msg),size)
             # print "generated cache key %s" % (cache_key)
         if self.cache.has_key(cache_key):
-            if time.time() - self.cache[cache_key][0] <= 60:
+            if time.time() - self.cache[cache_key][0] <= 1:
                 # print "cache hit"
                 return self.cache[cache_key][1]
         key = self.nonce()
@@ -376,7 +376,7 @@ class _iproute2(Thread):
     def add_addr(self,link,addr):
         return self._del_add_addr(link,addr,"add")
 
-    def del_addr(self,link,add):
+    def del_addr(self,link,addr):
         return self._del_add_addr(link,addr,"del")
 
     def _del_add_addr(self,link,addr,action):
