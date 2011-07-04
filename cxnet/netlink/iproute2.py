@@ -95,6 +95,7 @@ class _iproute2(Thread):
         self.listeners = {
             0:    Queue(),
         }
+        self.cache = {}
         self.parser = rtnl_msg_parser()
         self.__nonce = 1
         self.__shutdown = False
@@ -239,17 +240,28 @@ class _iproute2(Thread):
         return result
 
 
-    def query_nl(self,msg,size=None):
+    def query_nl(self,msg,size=None,cache_key=None):
         """
         Send a message via netlink. Please note that it is the very
         internal method and you should not call it.
         """
+        if size is None:
+            size = 128
+        if cache_key is None:
+            cache_key = string_at(addressof(msg),size)
+            # print "generated cache key %s" % (cache_key)
+        if self.cache.has_key(cache_key):
+            if time.time() - self.cache[cache_key][0] <= 60:
+                # print "cache hit"
+                return self.cache[cache_key][1]
         key = self.nonce()
         self.listeners[key] = Queue()
         msg.hdr.sequence_number = key
         self.socket.send(msg,size)
         ret = self.get(key)
         del self.listeners[key]
+        if cache_key is not None:
+            self.cache[cache_key] = (time.time(),ret)
         return ret
 
 
