@@ -424,7 +424,7 @@ class rtnl_msg_parser(object):
         b = dict(p)
         [ b.__delitem__(x) for x in ["action","type","mask","index"] ]
 
-        [ msg.set_attr(at._rmap_[i][1], at._rmap_[i][0](k)) for i,k in b.items() ]
+        [ msg.set_attr(at[i][1], at[i][0](k)) for i,k in b.items() ]
 
         return msg
 
