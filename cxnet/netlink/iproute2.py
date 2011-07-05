@@ -54,8 +54,8 @@ from threading import Thread,enumerate
 
 token = "RT network subsystem interface"
 
-assert (2,6) <= sys.version_info
-assert token not in [ x.name for x in enumerate() ]
+assert (2,5) <= sys.version_info
+assert token not in [ x.name for x in enumerate() if hasattr(x,"name") ]
 
 __all__ = [ "iproute2" ]
 #
@@ -65,7 +65,7 @@ from cxnet.common import NotImplemented
 from cxnet.netlink.rtnl import *
 from cxnet.utils import dqn_to_int,get_base,get_short_mask
 from ctypes import *
-from select import epoll,EPOLLIN
+from select import poll,POLLIN
 try:
     from Queue import Queue
 except:
@@ -84,14 +84,17 @@ class _iproute2(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.setName(token)
-        self.daemon = True
-        self.e = epoll()
+        if hasattr(self,"setDaemon"):
+            self.setDaemon(True)
+        else:
+            self.daemon = True
+        self.e = poll()
         (self.ctlr,self.ctl) = os.pipe()
         self.socket = None
         self.mask = RTNLGRP_IPV4_IFADDR | RTNLGRP_IPV4_ROUTE | RTNLGRP_LINK | RTNLGRP_NEIGH
         self.restart_socket()
-        self.e.register(self.ctlr,EPOLLIN)
-        self.e.register(self.socket.fd,EPOLLIN)
+        self.e.register(self.ctlr,POLLIN)
+        self.e.register(self.socket.fd,POLLIN)
         self.listeners = {
             0:    Queue(),
         }
@@ -172,7 +175,7 @@ class _iproute2(Thread):
                             # restart socket
                             self.e.unregister(self.socket.fd)
                             self.restart_socket()
-                            self.e.register(self.socket.fd,EPOLLIN)
+                            self.e.register(self.socket.fd,POLLIN)
 
                     # receive and decode netlink message
                     elif fd[0] == self.socket.fd:
@@ -181,7 +184,6 @@ class _iproute2(Thread):
                             key = msg.hdr.sequence_number
                         else:
                             key = 0
-
                         # enqueue message into appropriate decoder queue
                         self.listeners[key].put((time.asctime(),l,msg))
 
