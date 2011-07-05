@@ -32,8 +32,8 @@ __all__ = [
 
 from ctypes import *
 
-from sys import maxsize
-if maxsize == 2147483647:
+from sys import maxint
+if maxint == 2147483647:
     cx_int = c_uint32
 else:
     cx_int = c_uint64
