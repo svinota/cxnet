@@ -489,7 +489,7 @@ class rtnl_msg_parser(object):
         except:
             pass
 
-        if "dev" in r.keys():
+        if r.has_key('dev'):
             ###
             # find a PPP session for this device
             ###
@@ -507,6 +507,8 @@ class rtnl_msg_parser(object):
                             fd.close()
                         except:
                             pass
+
+        if r['type'] == 'link' and not r.has_key('dev'):
+            r = None
+
         return r
-
-
