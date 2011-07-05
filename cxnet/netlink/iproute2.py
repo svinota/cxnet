@@ -233,7 +233,7 @@ class _iproute2(Thread):
                 parsed = self.parser.parse(x)
                 if isinstance(parsed,dict):
                     parsed["timestamp"] = t
-                result.append(parsed)
+                    result.append(parsed)
                 if not ((x.hdr.type > NLMSG_DONE) and (x.hdr.flags & NLM_F_MULTI)):
                     end = True
                     break
@@ -245,14 +245,11 @@ class _iproute2(Thread):
         Send a message via netlink. Please note that it is the very
         internal method and you should not call it.
         """
-        if size is None:
-            size = 128
         if cache_key is None:
-            cache_key = string_at(addressof(msg),size)
-            # print "generated cache key %s" % (cache_key)
+            key_size = size or 128
+            cache_key = string_at(addressof(msg),key_size)
         if self.cache.has_key(cache_key):
-            if time.time() - self.cache[cache_key][0] <= 1:
-                # print "cache hit"
+            if time.time() - self.cache[cache_key][0] <= 60:
                 return self.cache[cache_key][1]
         key = self.nonce()
         self.listeners[key] = Queue()
@@ -370,7 +367,7 @@ class _iproute2(Thread):
         msg = rtnl_msg()
         msg.hdr.type = RTM_GETLINK
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
-        return filter(lambda x: 'dev' in x.keys(), filter(lambda x: x['type'] == 'link', self.query_nl(msg)))
+        return self.query_nl(msg,cache_key="links")
 
 
     def add_addr(self,link,addr):
@@ -390,6 +387,9 @@ class _iproute2(Thread):
             key = link
         else:
             raise NotImplemented()
+
+        # invalidate cache
+        self.cache = {}
 
         ad = addr.split("/")
         request = {
@@ -413,14 +413,19 @@ class _iproute2(Thread):
         ret = self.get_all_addrs()
         if addr is None and link is None:
             return ret
-        result = []
-        for i in ret:
-            if 'dev' in i.keys():
-                if i['dev'] == link:
-                    result.append(i)
-            elif 'address' in i.keys():
-                if i['address'] == addr:
-                    result.append(i)
+
+        cache_key = 'addr:%s:%s' % (link,addr)
+        if self.cache.has_key(cache_key):
+            if time.time() - self.cache[cache_key][0] <= 60:
+                return self.cache[cache_key][1]
+
+        if link:
+            result = [ y for y in [ x for x in ret if x.has_key('dev') ] if y['dev'] == link ]
+        elif addr:
+            result = [ y for y in [ x for x in ret if x.has_key('address') ] if y['address'] == addr ]
+
+        self.cache[cache_key] = (time.time(), result)
+
         return result
 
     def get_all_addrs(self):
@@ -430,7 +435,7 @@ class _iproute2(Thread):
         msg = rtnl_msg()
         msg.hdr.type = RTM_GETADDR
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
-        return filter(lambda x: x['type'] == 'address', self.query_nl(msg))
+        return self.query_nl(msg)
 
 iproute2 = _iproute2()
 
