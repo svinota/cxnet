@@ -48,6 +48,7 @@ iproute2.get_link("eth2")
 #   ...
 #
 import sys
+import time
 from threading import Thread,enumerate
 
 
@@ -60,8 +61,9 @@ __all__ = [ "iproute2" ]
 #
 #
 #
+from cxnet.common import NotImplemented
 from cxnet.netlink.rtnl import *
-from cxnet.utils import dqn_to_int,get_base
+from cxnet.utils import dqn_to_int,get_base,get_short_mask
 from ctypes import *
 from select import poll,POLLIN
 try:
@@ -96,6 +98,7 @@ class _iproute2(Thread):
         self.listeners = {
             0:    Queue(),
         }
+        self.cache = {}
         self.parser = rtnl_msg_parser()
         self.__nonce = 1
         self.__shutdown = False
@@ -182,7 +185,7 @@ class _iproute2(Thread):
                         else:
                             key = 0
                         # enqueue message into appropriate decoder queue
-                        self.listeners[key].put((l,msg))
+                        self.listeners[key].put((time.asctime(),l,msg))
 
                 except:
                     pass
@@ -224,12 +227,14 @@ class _iproute2(Thread):
                 if not blocking:
                     break
 
-            (l,msg) = self.listeners[key].get()
+            (t,l,msg) = self.listeners[key].get()
             while l > 0:
                 x = rtnl_msg.from_address(addressof(msg) + bias)
                 bias += x.hdr.length
                 l -= x.hdr.length
                 parsed = self.parser.parse(x)
+                if isinstance(parsed,dict):
+                    parsed["timestamp"] = t
                 result.append(parsed)
                 if not ((x.hdr.type > NLMSG_DONE) and (x.hdr.flags & NLM_F_MULTI)):
                     end = True
@@ -237,17 +242,28 @@ class _iproute2(Thread):
         return result
 
 
-    def query_nl(self,msg,size=None):
+    def query_nl(self,msg,size=None,cache_key=None):
         """
         Send a message via netlink. Please note that it is the very
         internal method and you should not call it.
         """
+        if size is None:
+            size = 128
+        if cache_key is None:
+            cache_key = string_at(addressof(msg),size)
+            # print "generated cache key %s" % (cache_key)
+        if self.cache.has_key(cache_key):
+            if time.time() - self.cache[cache_key][0] <= 1:
+                # print "cache hit"
+                return self.cache[cache_key][1]
         key = self.nonce()
         self.listeners[key] = Queue()
         msg.hdr.sequence_number = key
         self.socket.send(msg,size)
         ret = self.get(key)
         del self.listeners[key]
+        if cache_key is not None:
+            self.cache[cache_key] = (time.time(),ret)
         return ret
 
 
@@ -357,6 +373,39 @@ class _iproute2(Thread):
         msg.hdr.type = RTM_GETLINK
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
         return filter(lambda x: 'dev' in x.keys(), filter(lambda x: x['type'] == 'link', self.query_nl(msg)))
+
+
+    def add_addr(self,link,addr):
+        return self._del_add_addr(link,addr,"add")
+
+    def del_addr(self,link,addr):
+        return self._del_add_addr(link,addr,"del")
+
+    def _del_add_addr(self,link,addr,action):
+        """
+        Add or delete an address to/from an interface
+        """
+        # get interface
+        if isinstance(link,str):
+            key = self.get_link(link)["index"]
+        elif isinstance(link,int):
+            key = link
+        else:
+            raise NotImplemented()
+
+        ad = addr.split("/")
+        request = {
+            "index": key,
+            "action": action,
+            "type": "address",
+            "mask": get_short_mask(addr),
+            "address": ad[0],
+            "local": ad[0],
+        }
+        msg = self.parser.create(request)
+        msg.hdr.flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL
+        return self.query_nl(msg)
+
 
     def get_addr(self,link=None,addr=None):
         """

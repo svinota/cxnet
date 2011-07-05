@@ -20,6 +20,8 @@ RT Netlink protocol
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from socket import htonl
+
 from generic import *
 from cxnet.common import *
 from cxnet.utils import dqn_to_int
@@ -166,43 +168,24 @@ class rtnl_socket(nl_socket):
 ###
 # attribute types
 ###
-# from cxnet.ip4 import 
 
-class t_ip4ad_raw:
-    def get(self,address):
-        return (c_uint8 * 4).from_address(address + sizeof(rtnl_hdr))
-class t_ip4ad:
-    def get(self,address):
-        r = t_ip4ad_raw().get(address)
-        return "%u.%u.%u.%u" % (r[0], r[1], r[2], r[3])
-    def encode(self,text):
-        from socket import htonl,ntohl
-        return c_uint32(htonl(dqn_to_int(text)))
-class t_l2ad_raw:
-    def get(self,address):
-        return (c_uint8 * 6).from_address(address + sizeof(rtnl_hdr))
-class t_l2ad:
-    def get(self,address):
-        r = t_l2ad_raw().get(address)
-        return "%x:%x:%x:%x:%x:%x" % (r[0], r[1], r[2], r[3], r[4], r[5])
-class t_uint:
-    def get(self,address):
-        return c_uint.from_address(address + sizeof(rtnl_hdr)).value
-class t_asciiz:
-    def get(self,address):
-        return string_at(address + sizeof(rtnl_hdr))
-    def encode(self,text):
-        return create_string_buffer(text)
-class t_none:
-    def get(self,address):
-        return None
+def t_ip4ad(address):
+    r = (c_uint8 * 4).from_address(address + sizeof(nlattr))
+    return "%u.%u.%u.%u" % (r[0], r[1], r[2], r[3])
+def t_l2ad(address):
+    r = (c_uint8 * 6).from_address(address + sizeof(nlattr))
+    return "%x:%x:%x:%x:%x:%x" % (r[0], r[1], r[2], r[3], r[4], r[5])
+def t_uint(address):
+    return c_uint.from_address(address + sizeof(nlattr)).value
+def t_asciiz(address):
+    return string_at(address + sizeof(nlattr))
+def t_none(address):
+    return None
 
-
-class rtnl_attr(object):
-    """
-    RT Netlink message attribute
-    """
-    pass
+def r_ip4ad(text):
+    return c_uint32(htonl(dqn_to_int(text)))
+def r_asciiz(text):
+    return create_string_buffer(text)
 
 ## address attributes
 #
@@ -221,9 +204,7 @@ IFA_ANYCAST    = 5
 IFA_CACHEINFO    = 6
 IFA_MULTICAST    = 7
 
-class ifa_attr (rtnl_attr):
-    def __init__(self):
-        self._map_ = {
+t_ifa_attr = {
             IFA_UNSPEC:     (t_none,    "none"),
             IFA_ADDRESS:    (t_ip4ad,   "address"),
             IFA_LOCAL:      (t_ip4ad,   "local"),
@@ -233,13 +214,14 @@ class ifa_attr (rtnl_attr):
             IFA_CACHEINFO:  (t_none,    "cacheinfo"),
             IFA_MULTICAST:  (t_ip4ad,   "multycast"),
         }
-        self._rmap_ = {
-            "address":      (t_ip4ad,   IFA_ADDRESS),
-            "local":        (t_ip4ad,   IFA_LOCAL),
-            "dev":          (t_asciiz,  IFA_LABEL),
-            "broadcast":    (t_ip4ad,   IFA_BROADCAST),
-            "anycast":      (t_ip4ad,   IFA_ANYCAST),
-            "multycast":    (t_ip4ad,   IFA_MULTICAST),
+
+r_ifa_attr = {
+            "address":      (r_ip4ad,   IFA_ADDRESS),
+            "local":        (r_ip4ad,   IFA_LOCAL),
+            "dev":          (r_asciiz,  IFA_LABEL),
+            "broadcast":    (r_ip4ad,   IFA_BROADCAST),
+            "anycast":      (r_ip4ad,   IFA_ANYCAST),
+            "multycast":    (r_ip4ad,   IFA_MULTICAST),
         }
 
 ## neighbor attributes
@@ -249,18 +231,10 @@ NDA_LLADDR    = 2
 NDA_CACHEINFO    = 3
 NDA_PROBES    = 4
 
-class nda_attr (rtnl_attr):
-    def __init__(self):
-        self._map_ = {
+t_nda_attr = {
             NDA_UNSPEC:    (t_none,    "none"),
-            NDA_DST: (
-                        (t_ip4ad,      "dest"),
-                        (t_ip4ad_raw,  "raw_dest"),
-                    ),
-            NDA_LLADDR: (
-                        (t_l2ad,       "lladdr"),
-                        (t_l2ad_raw,   "raw_lladdr"),
-                    ),
+            NDA_DST:       (t_ip4ad,   "dest"),
+            NDA_LLADDR:    (t_l2ad,    "lladdr"),
             NDA_CACHEINFO: (t_none,    "cacheinfo"),
             NDA_PROBES:    (t_none,    "probes"),
         }
@@ -332,9 +306,7 @@ RTM_F_CLONED    = 0x200    # This route is cloned
 RTM_F_EQUALIZE  = 0x400    # Multipath equalizer: NI
 RTM_F_PREFIX    = 0x800    # Prefix addresses
 
-class rta_attr (rtnl_attr):
-    def __init__(self):
-        self._map_ = {
+t_rta_attr = {
             RTA_UNSPEC:   (t_none,    "none"),
             RTA_DST:      (t_ip4ad,   "dst_prefix"),
             RTA_SRC:      (t_ip4ad,   "src_prefix"),
@@ -375,23 +347,15 @@ IFLA_WEIGHT     = 15
 IFLA_OPERSTATE  = 16
 IFLA_LINKMODE   = 17
 
-class ifla_attr (rtnl_attr):
-    def __init__(self):
-        self._map_ = {
-            IFLA_UNSPEC: (t_none,       "none"),
-            IFLA_ADDRESS: (
-                        (t_l2ad,        "hwaddr"),
-                        (t_l2ad_raw,    "raw_hwaddr"),
-                    ),
-            IFLA_BROADCAST: (
-                        (t_l2ad,        "broadcast"),
-                        (t_l2ad_raw,    "raw_broadcast"),
-                    ),
-            IFLA_IFNAME: (t_asciiz,     "dev"),
-            IFLA_MTU:    (t_uint,       "mtu"),
-            IFLA_LINK:   (t_uint,       "link"),
-            IFLA_QDISC:  (t_asciiz,     "qdisc"),
-            IFLA_STATS:  (t_none,       "stats"),
+t_ifla_attr = {
+            IFLA_UNSPEC:    (t_none,       "none"),
+            IFLA_ADDRESS:   (t_l2ad,        "hwaddr"),
+            IFLA_BROADCAST: (t_l2ad,        "broadcast"),
+            IFLA_IFNAME:    (t_asciiz,     "dev"),
+            IFLA_MTU:       (t_uint,       "mtu"),
+            IFLA_LINK:      (t_uint,       "link"),
+            IFLA_QDISC:     (t_asciiz,     "qdisc"),
+            IFLA_STATS:     (t_none,       "stats"),
         }
 
 
@@ -431,45 +395,6 @@ class rtnl_msg_parser(object):
     }
 
 
-    def align(self,k):
-        ###
-        # FIXME
-        # x -- Alignment. Must NOT be hardcoded! But ctypes gives
-        #      wrong alignment here.
-        ###
-        x = 4
-        ###
-        # possible variants:
-        #    * python-specific:    k - k%s + (k%x and x)
-        #        cause in python ((y > 0) and x) == x
-        #    * from lau:        ((k + x - 1) / x) * x
-        #    * from kernel sources:    (k + x - 1) & ~ (x - 1)
-        return (k + x - 1) & ~ (x - 1)
-
-    def get_attr(self,t,ptr,seen):
-        hdr = rtnl_hdr.from_address(ptr)
-        key = None
-        result = None
-        align = self.align(hdr.length)
-
-        if hdr.type in t._map_.keys():
-            if isinstance(t._map_[hdr.type][0],tuple):
-                result = t._map_[hdr.type][seen][0]().get(ptr)
-                key    = t._map_[hdr.type][seen][1]
-                seen  += 1
-                if seen == len(t._map_[hdr.type]):
-                    seen = 0
-                else:
-                    align  = 0
-            else:
-                result = t._map_[hdr.type][0]().get(ptr)
-                key    = t._map_[hdr.type][1]
-                seen   = 0
-
-
-        return (hdr.length,align,hdr.type,key,result,seen)
-
-
     def create(self,p):
         msg = rtnl_msg()
         t = msg.hdr.type = self.tmap[p["action"]][p["type"]]
@@ -480,13 +405,17 @@ class rtnl_msg_parser(object):
         elif \
             t <= RTM_DELADDR:
                 if len(p["local"].split(".")) == 4:
+                    # FIXME! must NOT be hardcoded
                     msg.data.address.family = 0x2
                 else:
                     raise NotImplemented()
                 msg.data.address.prefixlen = p["mask"]
                 msg.data.address.index = p["index"]
+                if not p.has_key("scope") and p["address"][:3] == "127":
+                    # FIXME! must NOT be hardcoded
+                    msg.data.address.scope = 0xfe
                 bias = ifaddrmsg
-                at = ifa_attr()
+                at = r_ifa_attr
         else:
             raise NotImplemented()
 
@@ -495,7 +424,7 @@ class rtnl_msg_parser(object):
         b = dict(p)
         [ b.__delitem__(x) for x in ["action","type","mask","index"] ]
 
-        [ msg.set_attr(at._rmap_[i][1], at._rmap_[i][0]().encode(k)) for i,k in b.items() ]
+        [ msg.set_attr(at[i][1], at[i][0](k)) for i,k in b.items() ]
 
         return msg
 
@@ -517,13 +446,14 @@ class rtnl_msg_parser(object):
                     r["flags"].append(i)
 
             bias = ifinfmsg
-            at = ifla_attr()
+            at = t_ifla_attr
         elif \
             t <= RTM_DELADDR:
             r["type"] = "address"
             r["mask"] = msg.data.address.prefixlen
+            r["index"] = msg.data.address.index
             bias = ifaddrmsg
-            at = ifa_attr()
+            at = t_ifa_attr
         elif \
             t <= RTM_DELROUTE:
             r["type"] = "route"
@@ -531,13 +461,13 @@ class rtnl_msg_parser(object):
             r["src_len"] = msg.data.route.src_len
             r["t"] = msg.data.route.table
             bias = rtmsg
-            at = rta_attr()
+            at = t_rta_attr
         elif \
             t <= RTM_GETNEIGH:
             r["type"] = "neigh"
             r["index"] = msg.data.neigh.index
             bias = ndmsg
-            at = nda_attr()
+            at = t_nda_attr
         else:
             r["type"] = "fake"
             r["action"] = "fake"
@@ -549,18 +479,15 @@ class rtnl_msg_parser(object):
         elif t in ad:
             r["action"] = "del"
 
-        ptr = addressof(msg) + sizeof(nlmsghdr) + sizeof(bias)
-        seen = 0
+        msg.set_offset(addressof(msg) + sizeof(nlmsghdr) + sizeof(bias))
 
-        while True:
-            (k,l,t,key,data,seen) = self.get_attr(at,ptr,seen)
-            if k == 0:
-                break
-            if key:
-                r[key] = data
-
-
-            ptr += l
+        try:
+            while True:
+                ret = msg.get_attr(at)
+                if ret is not None:
+                    r[ret[0]] = ret[1]
+        except:
+            pass
 
         if "dev" in r.keys():
             ###

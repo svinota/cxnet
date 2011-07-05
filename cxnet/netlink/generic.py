@@ -126,6 +126,23 @@ class attr_msg(object):
     def set_offset(self,offset):
         self.__offset = offset
 
+    def get_offset(self):
+        return self.__offset
+
+    def get_attr(self,type_map):
+
+        assert self.__offset < addressof(self) + self.hdr.length
+
+        hdr = nlattr.from_address(self.__offset)
+        ptr = self.__offset
+        self.__offset += NLMSG_ALIGN(hdr.nla_len)
+
+        if type_map.has_key(hdr.nla_type):
+            return (type_map[hdr.nla_type][1],type_map[hdr.nla_type][0](ptr))
+        else:
+            return None
+
+
     def set_attr(self,typ,obj):
         class attr(Structure):
             pass
