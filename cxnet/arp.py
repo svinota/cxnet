@@ -21,6 +21,7 @@ ARP protocol primitives
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from ctypes import *
+from cxnet.utils import make_map
 
 ## ARP protocol HARDWARE identifiers.
 ARPHRD_NETROM        = 0    # from KA9Q: NET/ROM pseudo
@@ -86,6 +87,8 @@ ARPHRD_MPLS_TUNNEL         = 899    # MPLS Tunnel Interface
 
 ARPHRD_VOID          = 0xFFFF    # Void type, nothing is known
 ARPHRD_NONE          = 0xFFFE    # zero header length
+
+(M_ARPHRD_MAP, M_ARPHRD_REVERSE) = make_map("ARPHRD_",globals())
 
 ## ARP protocol opcodes.
 ARPOP_REQUEST        = 1    # ARP request

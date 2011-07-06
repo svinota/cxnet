@@ -31,7 +31,14 @@ __all__ = [
     "ip_range",
     "UrandomPool",
     "PSK",
+    "make_map",
 ]
+
+
+def make_map(prefix,gs):
+        d = dict( [ (x,y) for x,y in gs.items() if x[:len(prefix)] == prefix ] )
+        r = dict( [ (y,x) for x,y in gs.items() if x[:len(prefix)] == prefix ] )
+        return (d,r)
 
 msk = []
 for i in range(33):
