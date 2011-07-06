@@ -118,28 +118,30 @@ class nlmsghdr(Structure):
     ]
 
 class attr_msg(object):
-    __offset = None
+    offset = None
 
     def size(self):
-        return self.__offset - addressof(self)
+        return self.offset - addressof(self)
 
-    def set_offset(self,offset):
-        self.__offset = offset
-
-    def get_offset(self):
-        return self.__offset
+    def setup(self,offset,direct={},reverse={}):
+        self.offset = offset
+        self.direct = direct
+        self.reverse = reverse
+        self.not_parsed_attrs = []
 
     def get_attr(self,type_map):
 
-        assert self.__offset < addressof(self) + self.hdr.length
+        assert self.offset < addressof(self) + self.hdr.length
 
-        hdr = nlattr.from_address(self.__offset)
-        ptr = self.__offset
-        self.__offset += NLMSG_ALIGN(hdr.nla_len)
+        hdr = nlattr.from_address(self.offset)
+        ptr = self.offset
+        self.offset += NLMSG_ALIGN(hdr.nla_len)
 
         if type_map.has_key(hdr.nla_type):
             return (type_map[hdr.nla_type][1],type_map[hdr.nla_type][0](ptr))
         else:
+            if self.reverse.has_key(hdr.nla_type):
+                self.not_parsed_attrs.append(self.reverse[hdr.nla_type])
             return None
 
 
@@ -158,17 +160,17 @@ class attr_msg(object):
             attr._fields_ = [("hdr",nlattr), ("data",type(obj))]
 
 
-        if self.__offset == None:
-                self.__offset = addressof(self.data)
+        if self.offset == None:
+                self.offset = addressof(self.data)
 
         # prepare header
-        a = attr.from_address(self.__offset)
+        a = attr.from_address(self.offset)
         a.hdr.nla_type = typ
         a.hdr.nla_len = sizeof(attr)
         a.data = obj.value
 
-        self.__offset += sizeof(a)
-        self.hdr.length = self.__offset - addressof(self.hdr)
+        self.offset += sizeof(a)
+        self.hdr.length = self.offset - addressof(self.hdr)
 
 class nlmsg(Structure,attr_msg):
     """
