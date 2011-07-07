@@ -20,7 +20,8 @@ RT Netlink protocol
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from socket import htonl
+from socket import htonl, socket, AF_INET, SOCK_DGRAM
+from fcntl import ioctl
 
 from generic import *
 from cxnet.common import *
@@ -29,6 +30,9 @@ from cxnet.utils import dqn_to_int
 import types
 
 from os import listdir
+
+## Wireless ioctl()
+SIOCGIWNAME = 0x8B01
 
 ##  RTnetlink multicast groups
 RTNLGRP_NONE = 0x0
@@ -433,7 +437,7 @@ class rtnl_msg_parser(object):
     """
     Generic RT Netlink attribute parser
     """
-
+    inet = socket(AF_INET,SOCK_DGRAM,0)
     tmap = {
         "add":  {
             "address":  RTM_NEWADDR,
@@ -491,7 +495,7 @@ class rtnl_msg_parser(object):
         if \
             t <= RTM_DELLINK:
             r["type"] = "link"
-            r["link_type"] = M_ARPHRD_REVERSE[msg.data.link.type]
+            r["link_type"] = M_ARPHRD_REVERSE[msg.data.link.type][7:]
             r["index"] = msg.data.link.index
             r["flags"] = []
             for (i,k) in iff.items():
@@ -550,6 +554,14 @@ class rtnl_msg_parser(object):
             r["not_parsed"] = str(msg.not_parsed_attrs)
 
         if r.has_key('dev'):
+            ###
+            # find wireless extensions for this device
+            ###
+            try:
+                r['wireless'] = ioctl(self.inet.fileno(), SIOCGIWNAME, r['dev'])
+            except:
+                r['wireless'] = None
+
             ###
             # find a PPP session for this device
             ###
