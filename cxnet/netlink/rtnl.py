@@ -24,6 +24,7 @@ from socket import htonl
 
 from generic import *
 from cxnet.common import *
+from cxnet.arp import *
 from cxnet.utils import dqn_to_int
 import types
 
@@ -177,8 +178,24 @@ def t_l2ad(address):
     return "%x:%x:%x:%x:%x:%x" % (r[0], r[1], r[2], r[3], r[4], r[5])
 def t_uint(address):
     return c_uint.from_address(address + sizeof(nlattr)).value
+def t_uint8(address):
+    return c_uint8.from_address(address + sizeof(nlattr)).value
+def t_uint32(address):
+    return c_uint32.from_address(address + sizeof(nlattr)).value
 def t_asciiz(address):
     return string_at(address + sizeof(nlattr))
+def t_state(address):
+    return M_IF_OPER_REVERSE[c_uint8.from_address(address + sizeof(nlattr)).value][8:]
+def t_ifmap(address):
+    r = rtnl_link_ifmap.from_address(address + sizeof(nlattr))
+    return str({
+        "mem_start":    r.mem_start,
+        "mem_end":      r.mem_end,
+        "base_addr":    r.base_addr,
+        "irq":          r.irq,
+        "dma":          r.dma,
+        "port":         r.port,
+    })
 def t_none(address):
     return None
 
@@ -203,6 +220,8 @@ IFA_BROADCAST    = 4
 IFA_ANYCAST    = 5
 IFA_CACHEINFO    = 6
 IFA_MULTICAST    = 7
+
+(M_IFA_MAP, M_IFA_REVERSE) = make_map("IFA_",globals())
 
 t_ifa_attr = {
             IFA_UNSPEC:     (t_none,    "none"),
@@ -231,6 +250,8 @@ NDA_LLADDR    = 2
 NDA_CACHEINFO    = 3
 NDA_PROBES    = 4
 
+(M_NDA_MAP, M_NDA_REVERSE) = make_map("NDA_",globals())
+
 t_nda_attr = {
             NDA_UNSPEC:    (t_none,    "none"),
             NDA_DST:       (t_ip4ad,   "dest"),
@@ -257,6 +278,9 @@ RTA_CACHEINFO  = 12    # FIXME: kernel://include/linux/rtnetlink.h:320, struct r
 RTA_SESSION    = 13
 RTA_MP_ALGO    = 14    # no longer used
 RTA_TABLE      = 15
+
+(M_RTA_MAP, M_RTA_REVERSE) = make_map("RTA_",globals())
+
 
 ## rtmsg.type
 RTN_UNSPEC     = 0
@@ -347,15 +371,40 @@ IFLA_WEIGHT     = 15
 IFLA_OPERSTATE  = 16
 IFLA_LINKMODE   = 17
 
+IF_OPER_UNKNOWN         = 0
+IF_OPER_NOTPRESENT      = 1
+IF_OPER_DOWN            = 2
+IF_OPER_LOWERLAYERDOWN  = 3
+IF_OPER_TESTING         = 4
+IF_OPER_DORMANT         = 5
+IF_OPER_UP              = 6
+
+(M_IF_OPER_MAP,  M_IF_OPER_REVERSE)   = make_map("IF_OPER_",globals())
+(M_IFLA_MAP,     M_IFLA_REVERSE)      = make_map("IFLA_",globals())
+
+class rtnl_link_ifmap(Structure):
+    _fields_ = [
+        ("mem_start",   c_uint64),
+        ("mem_end",     c_uint64),
+        ("base_addr",   c_uint64),
+        ("irq",         c_uint16),
+        ("dma",         c_uint8),
+        ("port",        c_uint8),
+    ]
+
 t_ifla_attr = {
-            IFLA_UNSPEC:    (t_none,       "none"),
+            IFLA_UNSPEC:    (t_none,        "none"),
             IFLA_ADDRESS:   (t_l2ad,        "hwaddr"),
             IFLA_BROADCAST: (t_l2ad,        "broadcast"),
-            IFLA_IFNAME:    (t_asciiz,     "dev"),
-            IFLA_MTU:       (t_uint,       "mtu"),
-            IFLA_LINK:      (t_uint,       "link"),
-            IFLA_QDISC:     (t_asciiz,     "qdisc"),
-            IFLA_STATS:     (t_none,       "stats"),
+            IFLA_IFNAME:    (t_asciiz,      "dev"),
+            IFLA_MTU:       (t_uint,        "mtu"),
+            IFLA_LINK:      (t_uint,        "link"),
+            IFLA_QDISC:     (t_asciiz,      "qdisc"),
+            IFLA_STATS:     (t_none,        "stats"),
+            IFLA_OPERSTATE: (t_state,       "state"),
+            IFLA_TXQLEN:    (t_uint32,      "txqlen"),
+            IFLA_LINKMODE:  (t_uint8,       "linkmode"),
+            IFLA_MAP:       (t_ifmap,       "ifmap"),
         }
 
 
@@ -419,7 +468,7 @@ class rtnl_msg_parser(object):
         else:
             raise NotImplemented()
 
-        msg.set_offset( addressof(msg) + sizeof(nlmsghdr) + sizeof(bias) )
+        msg.setup( addressof(msg) + sizeof(nlmsghdr) + sizeof(bias) )
 
         b = dict(p)
         [ b.__delitem__(x) for x in ["action","type","mask","index"] ]
@@ -435,10 +484,14 @@ class rtnl_msg_parser(object):
         aa = [RTM_NEWADDR,RTM_NEWLINK,RTM_NEWROUTE,RTM_NEWNEIGH]
         ad = [RTM_DELADDR,RTM_DELLINK,RTM_DELROUTE,RTM_DELNEIGH]
 
+        direct = {}
+        reverse = {}
+
         ## message type
         if \
             t <= RTM_DELLINK:
             r["type"] = "link"
+            r["link_type"] = M_ARPHRD_REVERSE[msg.data.link.type]
             r["index"] = msg.data.link.index
             r["flags"] = []
             for (i,k) in iff.items():
@@ -447,6 +500,8 @@ class rtnl_msg_parser(object):
 
             bias = ifinfmsg
             at = t_ifla_attr
+            direct = M_IFLA_MAP
+            reverse = M_IFLA_REVERSE
         elif \
             t <= RTM_DELADDR:
             r["type"] = "address"
@@ -454,6 +509,8 @@ class rtnl_msg_parser(object):
             r["index"] = msg.data.address.index
             bias = ifaddrmsg
             at = t_ifa_attr
+            direct = M_IFA_MAP
+            reverse = M_IFA_REVERSE
         elif \
             t <= RTM_DELROUTE:
             r["type"] = "route"
@@ -479,7 +536,7 @@ class rtnl_msg_parser(object):
         elif t in ad:
             r["action"] = "del"
 
-        msg.set_offset(addressof(msg) + sizeof(nlmsghdr) + sizeof(bias))
+        msg.setup(addressof(msg) + sizeof(nlmsghdr) + sizeof(bias),direct,reverse)
 
         try:
             while True:
@@ -488,6 +545,9 @@ class rtnl_msg_parser(object):
                     r[ret[0]] = ret[1]
         except:
             pass
+
+        if len(msg.not_parsed_attrs):
+            r["not_parsed"] = str(msg.not_parsed_attrs)
 
         if r.has_key('dev'):
             ###
