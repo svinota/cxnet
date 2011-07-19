@@ -20,9 +20,11 @@ TCP protocol primitives
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from ctypes import *
-from cxnet.generic import *
-from cxnet.common import csum, csum_words, csum_complement
+from ctypes import Structure, BigEndianStructure
+from ctypes import c_uint8, c_uint16, c_uint32
+from ctypes import sizeof
+from cxnet.generic import GenericProtocol
+from cxnet.utils import csum_words, csum_complement
 
 class tcphdr(BigEndianStructure):
     _fields_ = [
@@ -80,6 +82,12 @@ class TCPProtocol(GenericProtocol):
         self.p_hdr.tot_len = sizeof(msg)
         msg.hdr.hdrlen = sizeof(msg.hdr) // 4
         msg.hdr.chksum = 0
-        #msg.hdr.chksum = csum(self.p_hdr,sizeof(self.p_hdr)) + csum(msg,sizeof(msg))
         msg.hdr.chksum = csum_complement(csum_words(self.p_hdr,sizeof(self.p_hdr)) + csum_words(msg,sizeof(msg)))
         return msg
+
+__all__ = [
+    "TCPProtocol",
+    "tcp_f_comp",
+    "tcp_f_hdr",
+    "tcphdr",
+]

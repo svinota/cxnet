@@ -20,7 +20,9 @@ Ethernet definitions from if_ether.h
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from ctypes import *
+from ctypes import BigEndianStructure
+from ctypes import c_uint8, c_uint16
+from cxnet.utils import export_by_prefix
 
 ##
 #    IEEE 802.3 Ethernet magic constants.  The frame sizes omit the preamble
@@ -105,3 +107,7 @@ class ethhdr (BigEndianStructure):
         ("proto",   c_uint16),              # packet type ID field 
     ]
 
+
+__all__ = [
+    "ethhdr",
+] + export_by_prefix("ETH",globals())

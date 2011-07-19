@@ -20,7 +20,13 @@ Generic IP protocol primitives
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from ctypes import *
+from ctypes import Structure, BigEndianStructure
+from ctypes import c_uint16, c_uint64
+
+__all__ = [
+    "GenericHeader",
+    "GenericProtocol",
+]
 
 class GenericHeader (BigEndianStructure):
     _fields_ = [

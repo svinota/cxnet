@@ -20,8 +20,11 @@ Netlink IP Queue
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from generic import *
-from cxnet.common import *
+from cxnet.common import cx_int
+from cxnet.netlink.core import nl_socket, nlmsghdr, NETLINK_FIREWALL, NLM_F_REQUEST
+
+from ctypes import Structure, Union
+from ctypes import c_byte, c_ubyte, c_char, c_ulong, c_long, c_uint, c_ushort
 
 # Types of IPQ messages
 IPQM_BASE    = 0x10        # standard netlink messages below this

@@ -40,13 +40,6 @@ iproute2.get_link("eth2")
 # along with Connexion; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-#
-# Version requirements:
-#   epoll -> >= 2.6
-#   Queue -> <  3.0
-#
-#   ...
-#
 import sys
 import time
 from threading import Thread,enumerate
@@ -62,9 +55,13 @@ __all__ = [ "iproute2" ]
 #
 #
 from cxnet.common import NotImplemented
-from cxnet.netlink.rtnl import *
+from cxnet.netlink.core import NLM_F_DUMP, NLM_F_REQUEST, NLM_F_ACK, NLM_F_CREATE, NLM_F_EXCL, NLM_F_MULTI, NLMSG_DONE
+from cxnet.netlink.core import nlmsghdr
+from cxnet.netlink.rtnl import RTNLGRP_IPV4_IFADDR, RTNLGRP_IPV4_ROUTE, RTNLGRP_LINK, RTNLGRP_NEIGH
+from cxnet.netlink.rtnl import RTM_GETADDR, RTM_GETLINK, RTM_GETNEIGH, RTM_GETROUTE
+from cxnet.netlink.rtnl import rtnl_socket, rtnl_msg_parser, rtnl_msg, ndmsg
 from cxnet.utils import dqn_to_int,get_base,get_short_mask
-from ctypes import *
+from ctypes import sizeof, addressof, string_at
 from select import poll,POLLIN
 try:
     from Queue import Queue

@@ -22,14 +22,15 @@ RT Netlink protocol
 
 from socket import htonl, socket, AF_INET, SOCK_DGRAM
 from fcntl import ioctl
-
-from generic import *
-from cxnet.common import *
-from cxnet.arp import *
-from cxnet.utils import dqn_to_int
-import types
+from ctypes import Structure, Union
+from ctypes import sizeof, addressof, string_at, create_string_buffer
+from ctypes import c_uint, c_uint8, c_uint16, c_uint32, c_uint64, c_ubyte, c_int, c_int32, c_ushort, c_byte
+from cxnet.netlink.core import nl_socket, nlmsghdr, nlattr, attr_msg, NLMSG_MAX_LEN, NETLINK_ROUTE
+from cxnet.arp import M_ARPHRD_REVERSE
+from cxnet.utils import dqn_to_int, make_map, export_by_prefix
 
 from os import listdir
+
 
 ## Wireless ioctl()
 SIOCGIWNAME = 0x8B01
@@ -55,7 +56,6 @@ RTNLGRP_DECnet_RULE = 0x8000
 RTNLGRP_NOP4 = 0x10000
 RTNLGRP_IPV6_PREFIX = 0x20000
 RTNLGRP_IPV6_RULE = 0x40000
-
 
 ## Types of messages
 RTM_BASE         = 16
@@ -253,7 +253,6 @@ NDA_DST        = 1
 NDA_LLADDR    = 2
 NDA_CACHEINFO    = 3
 NDA_PROBES    = 4
-
 (M_NDA_MAP, M_NDA_REVERSE) = make_map("NDA_",globals())
 
 t_nda_attr = {
@@ -333,7 +332,6 @@ RTM_F_NOTIFY    = 0x100    # Notify user of route change
 RTM_F_CLONED    = 0x200    # This route is cloned
 RTM_F_EQUALIZE  = 0x400    # Multipath equalizer: NI
 RTM_F_PREFIX    = 0x800    # Prefix addresses
-
 t_rta_attr = {
             RTA_UNSPEC:   (t_none,    "none"),
             RTA_DST:      (t_ip4ad,   "dst_prefix"),
@@ -382,7 +380,6 @@ IF_OPER_LOWERLAYERDOWN  = 3
 IF_OPER_TESTING         = 4
 IF_OPER_DORMANT         = 5
 IF_OPER_UP              = 6
-
 (M_IF_OPER_MAP,  M_IF_OPER_REVERSE)   = make_map("IF_OPER_",globals())
 (M_IFLA_MAP,     M_IFLA_REVERSE)      = make_map("IFLA_",globals())
 
@@ -431,6 +428,11 @@ iff["PORTSEL"]      = 0x2000# can set media type
 iff["AUTOMEDIA"]    = 0x4000# auto media select active
 iff["DYNAMIC"]      = 0x8000# dialup device with changing addresses
 
+export = [ "SIOCGIWNAME" ]
+export += export_by_prefix("NDA",globals())
+export += export_by_prefix("IF",globals())
+export += export_by_prefix("RT",globals())
+export += export_by_prefix("M_",globals())
 
 
 class rtnl_msg_parser(object):
@@ -584,3 +586,9 @@ class rtnl_msg_parser(object):
             r = None
 
         return r
+
+__all__ = [
+    "rtnl_msg_parser",
+    "rtnl_socket",
+    "ndmsg",
+] + export

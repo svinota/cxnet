@@ -20,10 +20,13 @@ Netlink Taskstats protocol implementation
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from generic import *
-from genetlink import *
-from cxnet.common import *
+from cxnet.utils import hprint
+from cxnet.netlink.core import nlattr, NLMSG_ALIGN
+from cxnet.netlink.generic import genl_socket
 
+from ctypes import Structure
+from ctypes import create_string_buffer, sizeof, addressof
+from ctypes import c_uint8, c_uint16, c_uint32, c_uint64, c_char, c_ubyte
 
 TASKSTATS_VERSION = 6
 TS_COMM_LEN = 32

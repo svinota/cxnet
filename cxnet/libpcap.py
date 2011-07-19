@@ -22,7 +22,8 @@ A simple libpcap injector
 
 __all__ = ["pcap_interface"]
 
-from ctypes import *
+from ctypes import CDLL
+from ctypes import create_string_buffer, sizeof, addressof, string_at, byref
 
 PCAP_ERRBUF_SIZE = 256
 
