@@ -105,11 +105,11 @@ class genl_socket(nl_socket):
         return c_uint16.from_address(addressof(prid) + sizeof(prid)).value
 
 
-    def send_cmd(self,prid,cmd,nla_type,nla_data):
+    def send_cmd(self,prid,cmd,nla_type,nla_data,seq=0):
         msg = genlmsg()
         msg.hdr.type = prid
         msg.hdr.flags = NLM_F_REQUEST
-        msg.hdr.seq = 0
+        msg.hdr.sequence_number = seq
         msg.genlmsghdr.cmd = cmd
         msg.genlmsghdr.version = 0x1
         msg.set_attr(nla_type,nla_data)
