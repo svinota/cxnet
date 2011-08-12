@@ -6,10 +6,15 @@
 Welcome to cxnet library's documentation!
 =========================================
 
+
+
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
+    :numbered:
+
+    netlink.rst
 
 Indices and tables
 ==================
