@@ -1,5 +1,5 @@
 """
-Generic Netlink protocol implementation
+Core netlink services.
 """
 
 #     Copyright (c) 2007-2011 ALT Linux, Peter V. Saveliev
@@ -27,13 +27,6 @@ from socket import AF_NETLINK, SOCK_RAW
 from os import getpid
 from cxnet.common import libc, cx_int
 from cxnet.utils import export_by_prefix
-
-__all__ = [
-    "nlmsghdr",
-    "nlmsg",
-    "attr_msg",
-    "nl_socket",
-]
 
 ##  Netlink family
 #
@@ -87,28 +80,11 @@ def NLMSG_ALIGN(l):
     return ( l + NLMSG_ALIGNTO - 1) & ~ (NLMSG_ALIGNTO - 1)
 
 # 8<--------------------------------------------------------
-#
-# structures for recvmsg(2) support
-#
-class iov(Structure):
-    _fields_ = [
-        ("buf",cx_int),
-        ("size",cx_int),
-    ]
-
-class rmsg(Structure):
-    _fields_ = [
-        ("sa_addr",cx_int),
-        ("sa_size",cx_int),
-        ("iov_addr",cx_int),
-        ("x1",cx_int),
-        ("x2",cx_int),
-        ("x3",cx_int),
-        ("x4",cx_int),
-    ]
-# 8<--------------------------------------------------------
 
 class nlattr(Structure):
+    """
+    Netlink attribute header
+    """
     _fields_ = [
         ("nla_len",     c_uint16),
         ("nla_type",    c_uint16),
@@ -116,7 +92,7 @@ class nlattr(Structure):
 
 class nlmsghdr(Structure):
     """
-    Generic Netlink message header
+    Netlink message header
     """
     _fields_ = [
         ("length",             c_uint32),
@@ -127,18 +103,33 @@ class nlmsghdr(Structure):
     ]
 
 class attr_msg(object):
+    """
+    Common routines to get and set Netlink attributes from/to a message.
+    You can use this class as a base class along with ctypes'
+    Structure/Union -- see nlattr and nlmsg classes
+    """
     offset = None
 
     def size(self):
         return self.offset - addressof(self)
 
     def setup(self,offset,direct={},reverse={}):
+        """
+        Setup a message before parsing. One should provide the initial offset,
+        direct and reverse attribute mappings.
+        """
         self.offset = offset
         self.direct = direct
         self.reverse = reverse
         self.not_parsed_attrs = []
 
     def get_attr(self,type_map):
+        """
+        Get the next attribute. Raises an exception when there is no attributes
+        left to read.
+
+        TODO: turn it into a generator.
+        """
 
         assert self.offset < addressof(self) + self.hdr.length
 
@@ -154,7 +145,12 @@ class attr_msg(object):
             return None
 
 
-    def set_attr(self,typ,obj):
+    def set_attr(self,t,obj):
+        """
+        Set an attribute `obj` of type `t`. The type should be an integer
+        that hdr.nla_type will be set to. Ths object should support ctypes'
+        method sizeof()
+        """
         class attr(Structure):
             pass
 
@@ -174,7 +170,7 @@ class attr_msg(object):
 
         # prepare header
         a = attr.from_address(self.offset)
-        a.hdr.nla_type = typ
+        a.hdr.nla_type = t
         a.hdr.nla_len = sizeof(attr)
         a.data = obj.value
 
@@ -183,7 +179,7 @@ class attr_msg(object):
 
 class nlmsg(Structure,attr_msg):
     """
-    Generic Netlink message structure
+    Netlink message structure
     """
     _fields_ = [
         ("hdr",         nlmsghdr),
@@ -213,7 +209,7 @@ class sockaddr(Structure):
 
 class nl_socket(object):
     """
-    Generic Netlink socket
+    Netlink socket
     """
     fd = None    # socket file descriptor
     msg = nlmsg    # message pattern
@@ -257,22 +253,6 @@ class nl_socket(object):
                 raise Exception("Netlink error %i" % (error.code))
 
         return (l,msg)
-
-    def recv2(self):
-        """
-        Receive a packet from Netlink socket (using recvmsg(2))
-        """
-        buf = self.msg()
-        i = iov(addressof(buf),sizeof(buf))
-        sa = sockaddr()
-        msg = rmsg(addressof(sa),sizeof(sa),addressof(i),1,0,0,0)
-        l = libc.recvmsg(self.fd, byref(msg), 0)
-        if l == -1:
-            msg = None
-
-        return (l,buf)
-
-
 
     def send(self, msg, size=0):
         """
