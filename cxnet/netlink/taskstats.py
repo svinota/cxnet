@@ -20,16 +20,18 @@ Netlink Taskstats protocol implementation
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from cxnet.utils import hprint
-from cxnet.netlink.core import nlattr, NLMSG_ALIGN
-from cxnet.netlink.generic import genl_socket
-
 from ctypes import Structure
 from ctypes import create_string_buffer, sizeof, addressof
 from ctypes import c_uint8, c_uint16, c_uint32, c_uint64, c_char, c_ubyte
 
+from cxnet.utils import hprint
+from cxnet.netlink.core import nlattr, NLMSG_ALIGN
+from cxnet.netlink.generic import genl_socket
+
+
 TASKSTATS_VERSION = 6
 TS_COMM_LEN = 32
+
 
 class taskstatsmsg(Structure):
     _pack_ = 8
@@ -193,17 +195,14 @@ class taskstatsmsg(Structure):
         "cpu_scaled_run_real_total":"Scaled cpu_run_real_total",
     }
 
-    def pprint(self,attr=None):
-        print(self.sprint(attr))
+    def __str__(self):
+        def inner(attr):
+            return "{0:<26}{1:<32}{2}".format(
+                attr, getattr(self, attr), self.descriptions[attr])
 
-    def sprint(self,attr=None):
-        if attr is not None:
-            return "%-26s%-32s%s" % (attr,getattr(self,attr),self.descriptions[attr])
-        else:
-            s = ""
-            for x in sorted(self.descriptions.keys()):
-                s += "%s\n" % (self.sprint(x))
-            return s
+        return "\n".join(map(inner, sorted(self.descriptions)))
+
+
 #
 # Commands sent from userspace
 # Not versioned.
@@ -226,8 +225,6 @@ TASKSTATS_CMD_ATTR_REGISTER_CPUMASK   = 3
 TASKSTATS_CMD_ATTR_DEREGISTER_CPUMASK = 4
 
 
-
-
 if __name__ == "__main__":
     ###
     #
@@ -247,25 +244,30 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         try:
             pid = int(sys.argv[1])
-        except:
+        except ValueError:
             mask = sys.argv[1][1:]
     else:
         import os
         pid = os.getpid()
 
-
     if pid:
-        (l,msg) = s.send_cmd(prid,TASKSTATS_CMD_GET,TASKSTATS_CMD_ATTR_PID,c_uint32(pid))
+        s.send_cmd(prid, TASKSTATS_CMD_GET, TASKSTATS_CMD_ATTR_PID, c_uint32(pid))
+        l, msg = s.recv()
+
     if mask:
-        print "PRID: %x" % (prid)
-        (l,msg) = s.send_cmd(prid,TASKSTATS_CMD_GET,TASKSTATS_CMD_ATTR_REGISTER_CPUMASK,create_string_buffer(mask,8))
+        s.send_cmd(prid,
+                   TASKSTATS_CMD_GET,
+                   TASKSTATS_CMD_ATTR_REGISTER_CPUMASK,
+                   create_string_buffer(mask, 8))
+        l, msg = s.recv()
+
     a = nlattr.from_address(addressof(msg.data))
     assert a.nla_type == TASKSTATS_TYPE_AGGR_PID
     pid = nlattr.from_address(addressof(msg.data) + sizeof(a))
     assert pid.nla_type == TASKSTATS_TYPE_PID
-    stats = taskstatsmsg.from_address(addressof(msg.data) + sizeof(a) + NLMSG_ALIGN(pid.nla_len) + sizeof(nlattr))
+    stats = taskstatsmsg.from_address(addressof(msg.data) + sizeof(a) +
+                                      NLMSG_ALIGN(pid.nla_len) + sizeof(nlattr))
 
-    stats.pprint()
-
-    print("\nraw packet dump:")
-    hprint(msg,l)
+    print(stats)    # Taskstats structure.
+    print("\n")
+    hprint(msg, l)  # Raw packet dump.
