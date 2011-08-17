@@ -20,7 +20,7 @@ RT Netlink protocol
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from socket import htonl, socket, AF_INET, SOCK_DGRAM
+from socket import htonl, socket, AF_INET, AF_INET6, SOCK_DGRAM
 from fcntl import ioctl
 from ctypes import Structure, Union
 from ctypes import sizeof, addressof, string_at, create_string_buffer
@@ -174,6 +174,9 @@ class rtnl_socket(nl_socket):
 # attribute types
 ###
 
+def t_ip6ad(address):
+    r = (c_uint8 * 16).from_address(address + sizeof(nlattr))
+    return "%x%x:%x%x:%x%x:%x%x:%x%x:%x%x:%x%x:%x%x" % (r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12], r[13], r[14], r[15])
 def t_ip4ad(address):
     r = (c_uint8 * 4).from_address(address + sizeof(nlattr))
     return "%u.%u.%u.%u" % (r[0], r[1], r[2], r[3])
@@ -238,6 +241,7 @@ t_ifa_attr = {
             IFA_MULTICAST:  (t_ip4ad,   "multycast"),
         }
 
+
 r_ifa_attr = {
             "address":      (r_ip4ad,   IFA_ADDRESS),
             "local":        (r_ip4ad,   IFA_LOCAL),
@@ -245,6 +249,13 @@ r_ifa_attr = {
             "broadcast":    (r_ip4ad,   IFA_BROADCAST),
             "anycast":      (r_ip4ad,   IFA_ANYCAST),
             "multycast":    (r_ip4ad,   IFA_MULTICAST),
+        }
+
+t_ifa6_attr = {
+            IFA_UNSPEC:     (t_none,    "none"),
+            IFA_ADDRESS:    (t_ip6ad,   "address"),
+            IFA_LABEL:      (t_asciiz,  "dev"),
+            IFA_CACHEINFO:  (t_none,    "cacheinfo"),
         }
 
 ## neighbor attributes
@@ -512,9 +523,13 @@ class rtnl_msg_parser(object):
             t <= RTM_DELADDR:
             r["type"] = "address"
             r["mask"] = msg.data.address.prefixlen
+            r["family"] = msg.data.address.family
             r["index"] = msg.data.address.index
             bias = ifaddrmsg
-            at = t_ifa_attr
+            if r["family"] == AF_INET:
+                at = t_ifa_attr
+            else:
+                at = t_ifa6_attr
             direct = M_IFA_MAP
             reverse = M_IFA_REVERSE
         elif \
