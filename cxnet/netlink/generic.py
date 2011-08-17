@@ -26,9 +26,6 @@ from ctypes import c_byte, c_ubyte, c_uint16
 from core import nlmsghdr, nl_socket, nlattr, attr_msg, NLM_F_REQUEST, NLMSG_MAX_LEN, NLMSG_MIN_TYPE, NLMSG_ALIGN
 import sys
 
-GENL_NAMSIZ   = 16    # length of family name
-GENL_MIN_ID   = NLMSG_MIN_TYPE
-GENL_MAX_ID   = 1023
 
 class genlmsghdr(Structure):
     _fields_ = [
@@ -37,12 +34,18 @@ class genlmsghdr(Structure):
         ("reserved",    c_uint16),
     ]
 
-class genlmsg(Structure,attr_msg):
+
+class genlmsg(Structure, attr_msg):
     _fields_ = [
         ("hdr",         nlmsghdr),
         ("genlmsghdr",  genlmsghdr),
         ("data",        c_byte * (NLMSG_MAX_LEN - sizeof(nlmsghdr) - sizeof(genlmsghdr))),
     ]
+
+
+GENL_NAMSIZ   = 16    # length of family name
+GENL_MIN_ID   = NLMSG_MIN_TYPE
+GENL_MAX_ID   = 1023
 
 GENL_HDRLEN         = NLMSG_ALIGN(sizeof(genlmsghdr))
 GENL_ADMIN_PERM     = 0x01
@@ -89,30 +92,32 @@ CTRL_ATTR_MCAST_GRP_UNSPEC  = 0x0
 CTRL_ATTR_MCAST_GRP_NAME    = 0x1
 CTRL_ATTR_MCAST_GRP_ID      = 0x2
 
+
 class genl_socket(nl_socket):
 
     msg = genlmsg
 
-    def get_protocol_id(self,name):
-        if sys.version_info >= (3,0):
-            buf = create_string_buffer(bytes(name,"ascii"))
+    def get_protocol_id(self, name):
+        if sys.version_info >= (3, 0):
+            buf = create_string_buffer(name.encode("utf-8"))
         else:
             buf = create_string_buffer(name)
-        (l,msg) = self.send_cmd(GENL_ID_CTRL,CTRL_CMD_GETFAMILY,CTRL_ATTR_FAMILY_NAME,buf)
+
+        self.send_cmd(GENL_ID_CTRL, CTRL_CMD_GETFAMILY,
+                      CTRL_ATTR_FAMILY_NAME, buf)
+        l, msg = self.recv()
         name = nlattr.from_address(addressof(msg.data))
-        prid = nlattr.from_address(addressof(msg.data) + NLMSG_ALIGN(name.nla_len))
+        prid = nlattr.from_address(addressof(msg.data) +
+                                   NLMSG_ALIGN(name.nla_len))
         assert prid.nla_type == CTRL_ATTR_FAMILY_ID
         return c_uint16.from_address(addressof(prid) + sizeof(prid)).value
 
-
-    def send_cmd(self,prid,cmd,nla_type,nla_data,seq=0):
+    def send_cmd(self, prid, cmd, nla_type, nla_data, seq=0):
         msg = genlmsg()
         msg.hdr.type = prid
         msg.hdr.flags = NLM_F_REQUEST
         msg.hdr.sequence_number = seq
         msg.genlmsghdr.cmd = cmd
         msg.genlmsghdr.version = 0x1
-        msg.set_attr(nla_type,nla_data)
-        self.send(msg,msg.size())
-        return  self.recv()
-
+        msg.set_attr(nla_type, nla_data)
+        return self.send(msg, msg.size())
