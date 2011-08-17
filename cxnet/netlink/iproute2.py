@@ -373,7 +373,7 @@ class _iproute2(Thread):
         return self._del_add_addr(link,addr,"add")
 
     def del_addr(self,link,addr):
-        return self._del_add_addr(link,addr,"del")
+        return self._del_add_addr(link,addr,"remove")
 
     def _del_add_addr(self,link,addr,action):
         """
