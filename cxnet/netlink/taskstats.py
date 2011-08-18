@@ -7,9 +7,12 @@
 
     .. seealso::
 
-       `Linux Kernel Documentation \
+       `Linux Kernel Documentation on taskstats \
          <http://www.kernel.org/doc/Documentation/accounting/taskstats.txt>`_
          For details on protocol internals.
+       `taskstats.h \
+         <http://www.kernel.org/doc/Documentation/accounting/taskstats-struct.txt>`_
+         For taskstats structure description.
 
     :copyright: (c) 2011 by ALT Linux, Peter V. Saveliev, see AUTHORS
                 for more details.
