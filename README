@@ -1,0 +1,27 @@
+Python networking library
+=========================
+
+    netlink — netlink, the Linux' kernel proto:
+        * core — common definitions
+        * generic — generic netlink(7)
+        * ipq — IPQ, userspace client for iptables -j QUEUE
+        * iproute2 — rtnetlink(7) high-level client, see also ip(8)
+        * rtnl — rtnetlink(7) implementation
+
+
+The primary home of the project is here:
+    http://projects.radlinux.org/cx
+
+Secondary repos:
+    https://github.com/svinota/cxnet
+
+Maillist
+========
+
+https://groups.google.com/group/connexion-project/
+
+Issues
+======
+
+http://projects.radlinux.org/cx/newticket
+https://github.com/svinota/cxnet/issues
