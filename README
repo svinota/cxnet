@@ -1,6 +1,10 @@
 Python networking library
 =========================
 
+The library is written in pure Python with extensive usage of ctypes
+module, that allows speed-up binary protocol parsing. It uses only
+two C libraries -- glibc and libpcap (optional).
+
     netlink — netlink, the Linux' kernel proto:
         * core — common definitions
         * generic — generic netlink(7)
@@ -13,7 +17,8 @@ The primary home of the project is here:
     http://projects.radlinux.org/cx
 
 Secondary repos:
-    https://github.com/svinota/cxnet
+    git://github.com/svinota/cxnet.git
+    git://git.altlinux.org/people/peet/packages/cxnet.git
 
 Maillist
 ========
