@@ -1,35 +1,28 @@
+# -*- coding: utf-8 -*-
 """
-RT Netlink protocol
+    cxnet.netlink.rtnl
+    ~~~~~~~~~~~~~~~~~~
+
+    RT Netlink protocol implementation.
+
+    :copyright: (c) 2011 by ALT Linux, Peter V. Saveliev, see AUTHORS
+                for more details.
+    :license: GPL, see LICENSE for more details.
 """
 
-#     Copyright (c) 2007-2011 ALT Linux, Peter V. Saveliev
-#
-#     This file is part of Connexion project.
-#
-#     Connexion is free software; you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation; either version 3 of the License, or
-#     (at your option) any later version.
-#
-#     Connexion is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
-#
-#     You should have received a copy of the GNU General Public License
-#     along with Connexion; if not, write to the Free Software
-#     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+from __future__ import absolute_import
 
-from socket import htonl, socket, AF_INET, AF_INET6, SOCK_DGRAM
-from fcntl import ioctl
+import os
 from ctypes import Structure, Union
 from ctypes import sizeof, addressof, string_at, create_string_buffer
-from ctypes import c_uint, c_uint8, c_uint16, c_uint32, c_uint64, c_ubyte, c_int, c_int32, c_ushort, c_byte
-from cxnet.netlink.core import nl_socket, nlmsghdr, nlattr, attr_msg, NLMSG_MAX_LEN, NETLINK_ROUTE
-from cxnet.arp import M_ARPHRD_REVERSE
-from cxnet.utils import dqn_to_int, make_map, export_by_prefix
+from ctypes import c_uint, c_uint8, c_uint16, c_uint32, c_uint64, c_ubyte
+from ctypes import c_int, c_int32, c_ushort, c_byte
+from fcntl import ioctl
+from socket import htonl, socket, AF_INET, AF_INET6, SOCK_DGRAM
 
-from os import listdir
+from ..arp import M_ARPHRD_REVERSE
+from ..utils import dqn_to_int, make_map, export_by_prefix
+from .core import nl_socket, nlmsghdr, nlattr, attr_msg, NLMSG_MAX_LEN, NETLINK_ROUTE
 
 
 ## Wireless ioctl()
@@ -122,7 +115,7 @@ class ifinfmsg(Structure):
 
 class ndmsg(Structure):
     _fields_ = [
-        ("family",   c_ubyte),    # 
+        ("family",   c_ubyte),    #
         ("index",    c_int),      # Interface index
         ("state",    c_uint16),   # Neighbor entry state
         ("flags",    c_uint8),    # Neighbor entry flags
@@ -376,7 +369,7 @@ IFLA_STATS      = 7
 IFLA_COST       = 8
 IFLA_PRIORITY   = 9
 IFLA_MASTER     = 10
-IFLA_WIRELESS   = 11 # Wireless Extension event - see iproute2:wireless.h 
+IFLA_WIRELESS   = 11 # Wireless Extension event - see iproute2:wireless.h
 IFLA_PROTINFO   = 12 # Protocol specific information for a link
 IFLA_TXQLEN     = 13
 IFLA_MAP        = 14
@@ -583,7 +576,7 @@ class rtnl_msg_parser(object):
             if r["dev"][:3] == "ppp":
                 # list all PPP session files in /var/run
                 # FIXME: see new FHS
-                for i in listdir("/var/run"):
+                for i in os.listdir("/var/run"):
                     if (i[:3] == "ppp") and (i[-3:] == "pid"):
                         try:
                             fd = open("/var/run/%s" % (i),"r")

@@ -1,30 +1,22 @@
+# -*- coding: utf-8 -*-
 """
-Netlink IP Queue
+    cxnet.netlink.ipq
+    ~~~~~~~~~~~~~~~~~
+
+    Netlink IP Queue implementation.
+
+    :copyright: (c) 2011 by Peter V. Saveliev, see AUTHORS for more details.
+    :license: GPL, see LICENSE for more details.
 """
 
-#     Copyright (c) 2008-2011 Peter V. Saveliev
-#
-#     This file is part of Connexion project.
-#
-#     Connexion is free software; you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation; either version 3 of the License, or
-#     (at your option) any later version.
-#
-#     Connexion is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
-#
-#     You should have received a copy of the GNU General Public License
-#     along with Connexion; if not, write to the Free Software
-#     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-from cxnet.common import cx_int
-from cxnet.netlink.core import nl_socket, nlmsghdr, NETLINK_FIREWALL, NLM_F_REQUEST
+from __future__ import absolute_import
 
 from ctypes import Structure, Union
 from ctypes import c_byte, c_ubyte, c_char, c_ulong, c_long, c_uint, c_ushort
+
+from ..common import cx_int
+from .core import nl_socket, nlmsghdr, NETLINK_FIREWALL, NLM_F_REQUEST
+
 
 # Types of IPQ messages
 IPQM_BASE    = 0x10        # standard netlink messages below this
@@ -33,7 +25,7 @@ IPQM_VERDICT = IPQM_BASE + 2    # Verdict from peer
 IPQM_PACKET  = IPQM_BASE + 3    # Packet from kernel
 IPQM_MAX     = IPQM_BASE + 4
 
-IPQ_COPY_NONE    = 0        # Initial mode, packets are dropped 
+IPQ_COPY_NONE    = 0        # Initial mode, packets are dropped
 IPQ_COPY_META    = 1        # Copy metadata
 IPQ_COPY_PACKET  = 2        # Copy metadata + packet (range)
 

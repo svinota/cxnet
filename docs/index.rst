@@ -6,15 +6,28 @@
 Welcome to cxnet library's documentation!
 =========================================
 
+User's Guide
+------------
 
-
-Contents:
+We'll have something here eventually.
 
 .. toctree::
     :maxdepth: 2
-    :numbered:
 
-    netlink.rst
+    tutorial
+
+
+API Reference
+-------------
+
+If you are looking for information on a specific function, class or
+method, this part of the documentation is for you.
+
+.. toctree::
+   :maxdepth: 2
+
+   api
+
 
 Indices and tables
 ==================

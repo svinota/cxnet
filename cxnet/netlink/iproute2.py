@@ -1,48 +1,38 @@
 """
-Python netlink based iproute2
+    cxnet.netlink.iproute2
+    ~~~~~~~~~~~~~~~~~~~~~~
 
-Remember, that cxnet library contains very simplified and
-very limited netlink implementation.
+    Netlink-based iproute2 implementation.
 
-Also, it uses default Queue() objects, that leads to
-low performance.
+    Quick example::
 
-And it is under permanent development. So, there will be
-new versions sometimes. Though (I hope) these versions
-will be compatible.
+        >>> from cxnet.netlink.iproute2 import iproute2
+        >>> iproute2.get_route("8.8.8.8")
+        [{'action': 'add',
+          'dst_len': 0,
+          'gateway': '192.168.40.1',
+          'output_link': 2L,
+          'src_len': 0,
+          't': 254,
+          'table': 254L,
+          'timestamp': 'Thu Aug 18 14:12:05 2011',
+          'type': 'route'}]
 
-Usage sample:
+    .. warning::
 
-from cxnet.netlink.iproute2 import iproute2
-iproute2.get_all_routes()
-iproute2.get_route("1.2.3.4")
-iproute2.get_neighbor("192.168.0.1")
-iproute2.get_link(1)
-iproute2.get_link("eth2")
-[ (x["dev"],x["flags"]) for x in iproute2.get_all_links() ]
+       * :mod:`cxnet` library implement a significantly simplified
+         Netlink version -- so don't expect much.
+       * It also uses :class:`Queue.Queue` objects, which results in
+         poor performance.
+
+    :copyright: (c) 2011 by ALT Linux, Peter V. Saveliev, see AUTHORS
+                for more details.
+    :license: GPL, see LICENSE for more details.
 """
-
-# Copyright (c) 2008-2011 ALT Linux, Peter V. Saveliev
-#
-# This file is part of Connexion project.
-#
-# Connexion is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# Connexion is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Connexion; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import sys
 import time
-from threading import Thread,enumerate
+from threading import Thread, enumerate
 
 
 token = "RT network subsystem interface"
