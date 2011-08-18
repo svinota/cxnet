@@ -1,6 +1,7 @@
 %define pprefix python-module
 
 Name: python-module-cxnet
+Summary: Python netlink library and more
 Version: 0.7.1
 Release: alt5
 License: GPLv3
