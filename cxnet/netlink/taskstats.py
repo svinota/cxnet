@@ -25,6 +25,52 @@ from ctypes import Structure
 from ctypes import c_uint8, c_uint16, c_uint32, c_uint64, c_char, c_ubyte
 
 
+#: Taskstats structure description, taken from ``taskstats.h`` -- this
+#: makes little PEP-8 cry >.<
+TASKSTATS_DESCRIPTION = {
+    "version" :                 "Taskstats protocol version",
+    "ac_exitcode":              "Exit status",
+    "ac_flag":                  "The accounting flags of a task (AFORK|ASU|ACOMPAT|ACORE|AXSIG) (linux/acct.h)",
+    "ac_nice":                  "Task nice",
+    "cpu_count":                "Number of CPU delay values recorded",
+    "cpu_delay_total":          "CPU cumulative delay in nanoseconds (wraps on overflow)",
+    "blkio_count":              "Number of delays waiting for synchronous block I/O to complete",
+    "blkio_delay_total":        "Cumulative delay waiting for synchronous block I/O to complete",
+    "swapin_count":             "Number of delays waiting for page fault I/O (swap in only)",
+    "swapin_delay_total":       "Cumulative delay waiting for page fault I/O (swap in only)",
+    "cpu_run_real_total":       "CPU `wall-clock' running time in nanoseconds, wraps on overflow",
+    "cpu_run_virtual_total":    "CPU `virtual' running time (as seen by the kernel)",
+    "ac_comm":                  "Command name",
+    "ac_sched":                 "Scheduling discipline",
+    "ac_uid":                   "User ID",
+    "ac_gid":                   "Group ID",
+    "ac_pid":                   "Process ID",
+    "ac_ppid":                  "Parent process ID",
+    "ac_btime":                 "Begin time [sec since 1970]",
+    "ac_etime":                 "Elapsed time [usec]",
+    "ac_utime":                 "User CPU time [usec]",
+    "ac_stime":                 "System CPU time [usec]",
+    "ac_minflt":                "Minor Page Fault Count",
+    "ac_majflt":                "Major Page Fault Count",
+    "coremem":                  "Accumulated RSS usage in MB-usec",
+    "virtmem":                  "Accumulated VM  usage in MB-usec",
+    "hiwater_rss":              "High-watermark of RSS usage, in KB",
+    "hiwater_vm":               "High-water VM usage, in KB",
+    "read_char":                "Bytes read",
+    "write_char":               "Bytes written",
+    "read_syscalls":            "Read syscalls",
+    "write_syscalls":           "Write syscalls",
+    "read_bytes":               "Bytes of read I/O",
+    "write_bytes":              "Bytes of write I/O",
+    "cancelled_write_bytes":    "Bytes of cancelled write I/O",
+    "nvcsw":                    "Voluntary_ctxt_switches",
+    "nivcsw":                   "Nonvoluntary_ctxt_switches",
+    "ac_utimescaled":           "Utime scaled on frequency etc",
+    "ac_stimescaled":           "Stime scaled on frequency etc",
+    "cpu_scaled_run_real_total":"Scaled cpu_run_real_total",
+}
+
+
 TASKSTATS_VERSION = 6
 
 #
@@ -100,6 +146,9 @@ class taskstatsmsg(Structure):
         ("cpu_scaled_run_real_total", c_uint64),
     ]
 
+    descriptions = TASKSTATS_DESCRIPTION
+
     def __str__(self):
-        return "\n".join("{0:<26}{1:<32}".format(attr, getattr(self, attr))
-                         for attr, _ in sorted(self._fields_))
+        return "\n".join(
+            "{0:<26}{1:<32}{2}".format(attr, getattr(self, attr), description)
+            for attr, description in sorted(self.descriptions.items()))
