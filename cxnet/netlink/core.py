@@ -1,32 +1,22 @@
+# -*- coding: utf-8 -*-
 """
-Core netlink services.
-"""
+    cxnet.netlink.core
+    ~~~~~~~~~~~~~~~~~~
 
-#     Copyright (c) 2007-2011 ALT Linux, Peter V. Saveliev
-#
-#     This file is part of Connexion project.
-#
-#     Connexion is free software; you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation; either version 3 of the License, or
-#     (at your option) any later version.
-#
-#     Connexion is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
-#
-#     You should have received a copy of the GNU General Public License
-#     along with Connexion; if not, write to the Free Software
-#     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+    This module implements core Netlink classes.
+
+    :copyright: (c) 2011 by ALT Linux, Peter V. Saveliev, see AUTHORS
+                for more details.
+    :license: GPL, see LICENSE for more details.
+"""
 
 from __future__ import absolute_import
 
+import os
 from ctypes import Structure
 from ctypes import sizeof, addressof, byref
 from ctypes import c_uint16, c_uint32, c_ushort, c_ubyte, c_byte
 from socket import AF_NETLINK, SOCK_RAW
-from os import getpid
 
 from ..common import libc, cx_int
 from ..utils import export_by_prefix
@@ -227,7 +217,7 @@ class nl_socket(object):
 
         sa = sockaddr()
         sa.family = AF_NETLINK
-        sa.pid = getpid()
+        sa.pid = os.getpid()
         sa.groups = groups
 
         code = libc.bind(self.fd, byref(sa), sizeof(sa))
@@ -285,7 +275,7 @@ class nl_socket(object):
             size = sizeof(msg)
 
         msg.hdr.length = size
-        msg.hdr.pid = getpid()
+        msg.hdr.pid = os.getpid()
 
 __all__ = [
     "nlmsghdr",

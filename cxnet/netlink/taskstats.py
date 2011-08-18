@@ -1,32 +1,30 @@
+# -*- coding: utf-8 -*-
 """
-Netlink Taskstats protocol implementation
+    cxnet.netlink.taskstats
+    ~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module implement Netlink taskstats protocol.
+
+    .. seealso::
+
+       `Linux Kernel Documentation \
+         <http://www.kernel.org/doc/Documentation/accounting/taskstats.txt>`_
+         For details on protocol internals.
+
+    :copyright: (c) 2011 by ALT Linux, Peter V. Saveliev, see AUTHORS
+                for more details.
+    :license: GPL, see LICENSE for more details.
 """
 
-#     Copyright (c) 2008-2011 ALT Linux, Peter V. Saveliev
-#
-#     This file is part of Connexion project.
-#
-#     Connexion is free software; you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation; either version 3 of the License, or
-#     (at your option) any later version.
-#
-#     Connexion is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
-#
-#     You should have received a copy of the GNU General Public License
-#     along with Connexion; if not, write to the Free Software
-#     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+from __future__ import absolute_import
 
 from ctypes import Structure
 from ctypes import create_string_buffer, sizeof, addressof
 from ctypes import c_uint8, c_uint16, c_uint32, c_uint64, c_char, c_ubyte
 
-from cxnet.utils import hprint
-from cxnet.netlink.core import nlattr, NLMSG_ALIGN
-from cxnet.netlink.generic import genl_socket
+from ..utils import hprint
+from .core import nlattr, NLMSG_ALIGN
+from .generic import genl_socket
 
 
 TASKSTATS_VERSION = 6

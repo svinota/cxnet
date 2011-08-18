@@ -1,30 +1,22 @@
+# -*- coding: utf-8 -*-
 """
-Generic netlink protocol implementation
+    cxnet.netlink.generic
+    ~~~~~~~~~~~~~~~~~~~~~
+
+    This module implements generic Netlink socket object.
+
+    :copyright: (c) 2011 by Peter V. Saveliev, see AUTHORS for more details.
+    :license: GPL, see LICENSE for more details.
 """
 
-#     Copyright (c) 2011 Peter V. Saveliev
-#
-#     This file is part of Connexion project.
-#
-#     Connexion is free software; you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation; either version 3 of the License, or
-#     (at your option) any later version.
-#
-#     Connexion is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
-#
-#     You should have received a copy of the GNU General Public License
-#     along with Connexion; if not, write to the Free Software
-#     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+from __future__ import absolute_import
 
+import sys
 from ctypes import Structure
 from ctypes import sizeof, create_string_buffer, addressof
 from ctypes import c_byte, c_ubyte, c_uint16
-from core import nlmsghdr, nl_socket, nlattr, attr_msg, NLM_F_REQUEST, NLMSG_MAX_LEN, NLMSG_MIN_TYPE, NLMSG_ALIGN
-import sys
+from .core import nlmsghdr, nl_socket, nlattr, attr_msg, NLM_F_REQUEST, \
+    NLMSG_MAX_LEN, NLMSG_MIN_TYPE, NLMSG_ALIGN
 
 
 class genlmsghdr(Structure):
