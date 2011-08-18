@@ -20,13 +20,18 @@ Core netlink services.
 #     along with Connexion; if not, write to the Free Software
 #     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from __future__ import absolute_import
+
 from ctypes import Structure
 from ctypes import sizeof, addressof, byref
 from ctypes import c_uint16, c_uint32, c_ushort, c_ubyte, c_byte
 from socket import AF_NETLINK, SOCK_RAW
 from os import getpid
-from cxnet.common import libc, cx_int
-from cxnet.utils import export_by_prefix
+
+from ..common import libc, cx_int
+from ..utils import export_by_prefix
+from .exceptions import NetlinkError
+
 
 ##  Netlink family
 #
@@ -218,17 +223,17 @@ class nl_socket(object):
         """
         Create and bind socket structure
         """
-        self.fd = libc.socket(AF_NETLINK,SOCK_RAW,family)
+        self.fd = libc.socket(AF_NETLINK, SOCK_RAW, family)
 
         sa = sockaddr()
         sa.family = AF_NETLINK
         sa.pid = getpid()
         sa.groups = groups
 
-        l = libc.bind(self.fd, byref(sa), sizeof(sa))
-        if l != 0:
+        code = libc.bind(self.fd, byref(sa), sizeof(sa))
+        if code:
             self.close()
-            raise Exception("libc.bind(): errcode %i" % (l))
+            raise NetlinkError(code)
 
     def close(self):
         """
@@ -250,7 +255,7 @@ class nl_socket(object):
                 msg = None
             elif (msg.hdr.type == NLMSG_ERROR):
                 error = nlmsgerr.from_address(addressof(msg.data))
-                raise Exception("Netlink error %i" % (error.code))
+                raise NetlinkError(error.code)
 
         return (l,msg)
 
