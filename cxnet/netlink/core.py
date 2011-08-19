@@ -19,7 +19,7 @@ from ctypes import c_uint16, c_uint32, c_ushort, c_ubyte, c_byte
 from socket import AF_NETLINK, SOCK_RAW
 
 from ..common import libc, cx_int
-from ..utils import export_by_prefix
+from ..utils import export_by_prefix, hline
 from .exceptions import NetlinkError
 
 
@@ -245,7 +245,7 @@ class nl_socket(object):
                 msg = None
             elif (msg.hdr.type == NLMSG_ERROR):
                 error = nlmsgerr.from_address(addressof(msg.data))
-                raise NetlinkError(error.code)
+                raise NetlinkError(error.code,"\nmsg dump:\n" + hline(msg,l))
 
         return (l,msg)
 
