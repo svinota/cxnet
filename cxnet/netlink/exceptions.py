@@ -15,8 +15,12 @@ import socket
 
 
 class NetlinkError(socket.error):
-    def __init__(self, code, msg=None):
+    def __init__(self, code, msg=None, hdr=None):
         if not msg:
             msg = os.strerror(code)
 
         super(NetlinkError, self).__init__(code, msg)
+
+        # hdr (if not none) should contain the netlink
+        # header that caused error
+        self.hdr = hdr

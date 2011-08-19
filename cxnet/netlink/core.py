@@ -244,8 +244,8 @@ class nl_socket(object):
             if (msg.hdr.type == NLMSG_NOOP):
                 msg = None
             elif (msg.hdr.type == NLMSG_ERROR):
-                error = nlmsgerr.from_address(addressof(msg.data))
-                raise NetlinkError(error.code,"\nmsg dump:\n" + hline(msg,l))
+                error = nlmsgerr.from_address(addressof(msg) + sizeof(nlmsghdr))
+                raise NetlinkError(error.code, msg = "\nmsg dump:\n" + hline(msg,l), hdr=error.hdr)
 
         return (l,msg)
 
