@@ -15,11 +15,11 @@ from __future__ import absolute_import
 import os
 from ctypes import Structure
 from ctypes import sizeof, addressof, byref
-from ctypes import c_uint16, c_uint32, c_ushort, c_ubyte, c_byte
+from ctypes import c_uint16, c_uint32, c_ushort, c_ubyte, c_byte, c_int
 from socket import AF_NETLINK, SOCK_RAW
 
-from ..common import libc, cx_int
-from ..utils import export_by_prefix
+from ..common import libc
+from ..utils import export_by_prefix, hline
 from .exceptions import NetlinkError
 
 
@@ -187,7 +187,7 @@ class nlmsgerr(Structure):
     Error message structure
     """
     _fields_ = [
-        ("code",        cx_int),
+        ("code",        c_int),
         ("hdr",         nlmsghdr),
     ]
 
@@ -244,8 +244,8 @@ class nl_socket(object):
             if (msg.hdr.type == NLMSG_NOOP):
                 msg = None
             elif (msg.hdr.type == NLMSG_ERROR):
-                error = nlmsgerr.from_address(addressof(msg.data))
-                raise NetlinkError(error.code)
+                error = nlmsgerr.from_address(addressof(msg) + sizeof(nlmsghdr))
+                raise NetlinkError(error.code, hdr=error.hdr)
 
         return (l,msg)
 
