@@ -17,6 +17,7 @@ from ctypes import sizeof, create_string_buffer, addressof
 from ctypes import c_byte, c_ubyte, c_uint16
 from .core import nlmsghdr, nl_socket, nlattr, attr_msg, NLM_F_REQUEST, \
     NLMSG_MAX_LEN, NLMSG_MIN_TYPE, NLMSG_ALIGN
+from .exceptions import NetlinkError, NetlinkNoSuchProtocol
 
 
 class genlmsghdr(Structure):
@@ -97,7 +98,14 @@ class genl_socket(nl_socket):
 
         self.send_cmd(GENL_ID_CTRL, CTRL_CMD_GETFAMILY,
                       CTRL_ATTR_FAMILY_NAME, buf)
-        l, msg = self.recv()
+        try:
+            l, msg = self.recv()
+        except NetlinkError,e:
+            if e.code == -2:
+                raise NetlinkNoSuchProtocol(e.hdr)
+            else:
+                raise e
+
         name = nlattr.from_address(addressof(msg.data))
         prid = nlattr.from_address(addressof(msg.data) +
                                    NLMSG_ALIGN(name.nla_len))
