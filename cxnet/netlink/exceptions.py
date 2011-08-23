@@ -26,3 +26,8 @@ class NetlinkError(socket.error):
         self.hdr = hdr
         self.code = code
 
+
+class NetlinkNoSuchProtocol(NetlinkError):
+    def __init__(self,hdr=None):
+        msg = "The protocol is not supported by your kernel"
+        NetlinkError.__init__(self,-2,msg,hdr)
