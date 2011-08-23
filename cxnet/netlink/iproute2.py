@@ -50,6 +50,7 @@ from cxnet.netlink.core import nlmsghdr
 from cxnet.netlink.rtnl import RTNLGRP_IPV4_IFADDR, RTNLGRP_IPV4_ROUTE, RTNLGRP_LINK, RTNLGRP_NEIGH
 from cxnet.netlink.rtnl import RTM_GETADDR, RTM_GETLINK, RTM_GETNEIGH, RTM_GETROUTE
 from cxnet.netlink.rtnl import rtnl_socket, rtnl_msg_parser, rtnl_msg, ndmsg
+from cxnet.netlink.exceptions import NetlinkError
 from cxnet.utils import dqn_to_int,get_base,get_short_mask
 from ctypes import sizeof, addressof, string_at
 from select import poll,POLLIN
@@ -166,14 +167,18 @@ class _iproute2(Thread):
 
                     # receive and decode netlink message
                     elif fd[0] == self.socket.fd:
-                        (l,msg) = self.socket.recv()
+                        try:
+                            (l,msg) = self.socket.recv()
+                        except NetlinkError,e:
+                            msg = e
+                            l = sizeof(e.hdr)
                         if msg.hdr.sequence_number in self.listeners.keys():
                             key = msg.hdr.sequence_number
-                        else:
-                            key = 0
-                        # enqueue message into appropriate decoder queue
-                        self.listeners[key].put((time.asctime(),l,msg))
-
+                            # enqueue message into appropriate decoder queue
+                            self.listeners[key].put((time.asctime(),l,msg))
+                        if key != 0:
+                            # copy message to default queue
+                            self.listeners[0].put((time.asctime(),l,msg))
                 except:
                     pass
 
@@ -215,6 +220,8 @@ class _iproute2(Thread):
                     break
 
             (t,l,msg) = self.listeners[key].get()
+            if isinstance(msg,NetlinkError):
+                raise msg
             while l > 0:
                 x = rtnl_msg.from_address(addressof(msg) + bias)
                 bias += x.hdr.length
