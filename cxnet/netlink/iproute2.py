@@ -172,8 +172,8 @@ class _iproute2(Thread):
                         except NetlinkError,e:
                             msg = e
                             l = sizeof(e.hdr)
-                        if msg.hdr.sequence_number in self.listeners.keys():
-                            key = msg.hdr.sequence_number
+                        key = msg.hdr.sequence_number
+                        if key in self.listeners.keys():
                             # enqueue message into appropriate decoder queue
                             self.listeners[key].put((time.asctime(),l,msg))
                         if key != 0:
