@@ -35,13 +35,9 @@ import time
 from threading import Thread, enumerate
 
 
-token = "RT network subsystem interface"
 
 assert (2,5) <= sys.version_info
-assert token not in [ x.name for x in enumerate() if hasattr(x,"name") ]
 
-__all__ = [ "iproute2" ]
-#
 #
 #
 from cxnet.common import NotImplemented
@@ -62,7 +58,7 @@ except:
 import os
 
 
-class _iproute2(Thread):
+class IpRoute2(Thread):
     """
     There can be only one running RTNL socket at a time. We create
     it implicitly with _iproute2() at module import time. All
@@ -70,6 +66,8 @@ class _iproute2(Thread):
     reference.
     """
     def __init__(self):
+        token = "RT network subsystem interface"
+        assert token not in [ x.name for x in enumerate() if hasattr(x,"name") ]
         Thread.__init__(self)
         self.setName(token)
         if hasattr(self,"setDaemon"):
@@ -413,47 +411,4 @@ class _iproute2(Thread):
         msg.hdr.type = RTM_GETADDR
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
         return self.query_nl(msg)
-
-iproute2 = _iproute2()
-
-def print_addr(addr):
-    if addr["local"] != addr["address"]:
-        # ppp/tunnel interface
-        print("\tinet %s peer %s" % (addr["local"], addr["address"]))
-    else:
-        # local address
-        print("\tinet %s/%i" % (addr["local"], addr["mask"]))
-
-def print_link(link):
-    print("%-5i%s: %s mtu %i qdisc %s" % (link["index"], link["dev"], link["flags"], link["mtu"], link["qdisc"]))
-    if "hwaddr" in link.keys():
-        print("\thwaddr %-17s broadcast %-17s" % (link["hwaddr"], link["broadcast"]))
-    [ print_addr(addr) for addr in iproute2.get_addr(link["dev"]) ]
-    print("")
-
-def print_route(route):
-    link = iproute2.get_link(int(route["output_link"]))
-    if "dst_prefix" in route.keys():
-        if "gateway" in route.keys():
-            print("%15s/%-2s via %15s dev %s" % (route["dst_prefix"], route["dst_len"], route["gateway"], link["dev"]))
-        else:
-            print("%15s/%-2s                     dev %s" % (route["dst_prefix"], route["dst_len"], link["dev"]))
-    else:
-        print("           default via %15s" % (route["gateway"]))
-
-def print_neighbor(neigh):
-    if not "lladdr" in neigh.keys():
-        neigh["lladdr"] = "incomplete"
-    link = iproute2.get_link(int(neigh["index"]))
-    print("%16s %15s %17s" % (link["dev"], neigh["dest"], neigh["lladdr"]))
-if __name__ == "__main__":
-
-    print("\nLinks:")
-    [ print_link(x) for x in iproute2.get_all_links() ]
-    print("\nRoutes in the table `main':")
-    [ print_route(x) for x in iproute2.get_all_routes() ]
-    print("\nRoutes in the table `local':")
-    [ print_route(x) for x in iproute2.get_all_routes(table=255) ]
-    print("\nARP cache:")
-    [ print_neighbor(x) for x in iproute2.get_all_neighbors() ]
 
