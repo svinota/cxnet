@@ -86,7 +86,6 @@ class _iproute2(Thread):
         self.listeners = {
             0:    Queue(),
         }
-        self.cache = {}
         self.parser = rtnl_msg_parser()
         self.__nonce = 1
         self.__shutdown = False
@@ -236,25 +235,17 @@ class _iproute2(Thread):
         return result
 
 
-    def query_nl(self,msg,size=None,cache_key=None):
+    def query_nl(self,msg,size=None):
         """
         Send a message via netlink. Please note that it is the very
         internal method and you should not call it.
         """
-        if cache_key is None:
-            key_size = size or 128
-            cache_key = string_at(addressof(msg),key_size)
-        if self.cache.has_key(cache_key):
-            if time.time() - self.cache[cache_key][0] <= 60:
-                return self.cache[cache_key][1]
         key = self.nonce()
         self.listeners[key] = Queue()
         msg.hdr.sequence_number = key
         self.socket.send(msg,size)
         ret = self.get(key)
         del self.listeners[key]
-        if cache_key is not None:
-            self.cache[cache_key] = (time.time(),ret)
         return ret
 
 
@@ -363,7 +354,7 @@ class _iproute2(Thread):
         msg = rtnl_msg()
         msg.hdr.type = RTM_GETLINK
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
-        return self.query_nl(msg,cache_key="links")
+        return self.query_nl(msg)
 
 
     def add_addr(self,link,addr):
@@ -383,9 +374,6 @@ class _iproute2(Thread):
             key = link
         else:
             raise NotImplemented()
-
-        # invalidate cache
-        self.cache = {}
 
         ad = addr.split("/")
         request = {
@@ -410,17 +398,10 @@ class _iproute2(Thread):
         if addr is None and link is None:
             return ret
 
-        cache_key = 'addr:%s:%s' % (link,addr)
-        if self.cache.has_key(cache_key):
-            if time.time() - self.cache[cache_key][0] <= 60:
-                return self.cache[cache_key][1]
-
         if link:
             result = [ y for y in [ x for x in ret if x.has_key('dev') ] if y['dev'] == link ]
         elif addr:
             result = [ y for y in [ x for x in ret if x.has_key('address') ] if y['address'] == addr ]
-
-        self.cache[cache_key] = (time.time(), result)
 
         return result
 
