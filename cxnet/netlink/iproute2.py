@@ -33,7 +33,7 @@
 
 import sys
 import time
-from threading import Thread, enumerate
+from threading import Thread, Condition, enumerate
 
 
 
@@ -83,8 +83,9 @@ class IpRoute2(Thread):
         self.e.register(self.ctlr,POLLIN)
         self.e.register(self.socket.fd,POLLIN)
         self.listeners = {
-            0:    Queue(),
+            0:  Queue(),
         }
+        self.sync = Condition()
         self.parser = rtnl_msg_parser()
         self.__nonce = 1
         self.__shutdown = False
@@ -98,34 +99,41 @@ class IpRoute2(Thread):
             self.socket.close()
         self.socket = rtnl_socket(groups = self.mask)
 
+    def send_ctl(self,command):
+        """
+        Send a command via internal ctl pipe and wait for response.
+        """
+        self.sync.acquire()
+        os.write(self.ctl,"%c" % (command))
+        self.sync.wait()
+        self.sync.release()
+
     def set_groups(self,mask):
         """
         Set group mask for RTNL socket
         """
-        # Please note, that (set|add|del)_groups? do not
-        # use locking -- for simplicity.
         self.mask = mask
-        os.write(self.ctl,"s")
+        self.send_ctl('s')
 
     def add_group(self,group):
         """
         Add a group to the RTNL socket mask
         """
         self.mask |= group
-        os.write(self.ctl,"s")
+        self.send_ctl('s')
 
     def del_group(self,group):
         """
         Remove a group from the RTNL socket mask
         """
         self.mask ^= group
-        os.write(self.ctl,"s")
+        self.send_ctl('s')
 
     def shutdown(self):
         """
         Completely shutdown the thread
         """
-        os.write(self.ctl,"q")
+        self.send_ctl('q')
 
     def run(self):
         """
@@ -148,6 +156,7 @@ class IpRoute2(Thread):
                     # control interface
                     if fd[0] == self.ctlr:
                         # read a command
+                        self.sync.acquire()
                         cmd = os.read(self.ctlr,1)
                         if cmd == "q":
                             # quit
@@ -156,12 +165,17 @@ class IpRoute2(Thread):
                             self.e.unregister(self.ctlr)
                             self.e.close()
                             self.socket.close()
+                            self.sync.notify()
+                            self.sync.release()
                             return
                         elif cmd == "s":
                             # restart socket
                             self.e.unregister(self.socket.fd)
                             self.restart_socket()
                             self.e.register(self.socket.fd,POLLIN)
+
+                        self.sync.notify()
+                        self.sync.release()
 
                     # receive and decode netlink message
                     elif fd[0] == self.socket.fd:
