@@ -6,7 +6,8 @@
 
     Quick example::
 
-        >>> from cxnet.netlink.iproute2 import iproute2
+        >>> from cxnet.netlink.iproute2 import IpRoute2
+        >>> iproute2 = IpRoute2()
         >>> iproute2.get_route("8.8.8.8")
         [{'action': 'add',
           'dst_len': 0,
