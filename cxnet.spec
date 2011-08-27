@@ -3,7 +3,7 @@
 Name: python-module-cxnet
 Summary: Python netlink library and more
 Version: 0.7.2
-Release: alt1
+Release: alt2
 License: GPLv3
 Group: Development/Python
 URL: http://projects.radlinux.org/cx/
@@ -45,6 +45,9 @@ Common definitions of packet structures (in ctypes):
 %{python_sitelibdir}/cxnet*
 
 %changelog
+* Sun Aug 28 2011 Peter V. Saveliev <peet@altlinux.org> 0.7.2-alt2
+- use Condition() to sync internal IpRoute2 commands
+
 * Wed Aug 24 2011 Peter V. Saveliev <peet@altlinux.org> 0.7.2-alt1
 - no default RT Netlink thread - one should start it manually
 - exception handling
