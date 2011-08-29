@@ -438,6 +438,9 @@ export += export_by_prefix("IF",globals())
 export += export_by_prefix("RT",globals())
 export += export_by_prefix("M_",globals())
 
+class RtNetlinkEvent(dict):
+    def __hash__(self):
+        return hash(frozenset([ y for (x,y) in self.items() if x not in ('timestamp','action') ]))
 
 class rtnl_msg_parser(object):
     """
@@ -488,7 +491,7 @@ class rtnl_msg_parser(object):
         return msg
 
     def parse(self,msg):
-        r = {}
+        r = RtNetlinkEvent()
         t = msg.hdr.type
 
         aa = [RTM_NEWADDR,RTM_NEWLINK,RTM_NEWROUTE,RTM_NEWNEIGH]
@@ -594,6 +597,7 @@ class rtnl_msg_parser(object):
         return r
 
 __all__ = [
+    "RtNetlinkEvent",
     "rtnl_msg_parser",
     "rtnl_socket",
     "ndmsg",
