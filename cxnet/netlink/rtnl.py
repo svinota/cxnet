@@ -355,6 +355,25 @@ t_rta_attr = {
             RTA_TABLE:    (t_uint,    "table"),
         }
 
+t_rta6_attr = {
+            RTA_UNSPEC:   (t_none,    "none"),
+            RTA_DST:      (t_ip6ad,   "dst_prefix"),
+            RTA_SRC:      (t_ip6ad,   "src_prefix"),
+            RTA_IIF:      (t_uint,    "input_link"),
+            RTA_OIF:      (t_uint,    "output_link"),
+            RTA_GATEWAY:  (t_ip6ad,   "gateway"),
+            RTA_PRIORITY: (t_uint,    "priority"),
+            RTA_PREFSRC:  (t_ip6ad,   "prefsrc"),
+            RTA_METRICS:  (t_uint,    "metric"),
+            RTA_MULTIPATH:(t_none,    "mp"),
+            RTA_PROTOINFO:(t_none,    "protoinfo"),
+            RTA_FLOW:     (t_none,    "flow"),
+            RTA_CACHEINFO:(t_none,    "cacheinfo"),
+            RTA_SESSION:  (t_none,    "session"),
+            RTA_MP_ALGO:  (t_none,    "mp_algo"), # no longer used
+            RTA_TABLE:    (t_uint,    "table"),
+        }
+
 
 
 ## link attributes
@@ -533,9 +552,13 @@ class rtnl_msg_parser(object):
             r["type"] = "route"
             r["dst_len"] = msg.data.route.dst_len
             r["src_len"] = msg.data.route.src_len
-            r["t"] = msg.data.route.table
+            r["table"] = msg.data.route.table
+            r['family'] = msg.data.route.family
             bias = rtmsg
-            at = t_rta_attr
+            if r['family'] == AF_INET:
+                at = t_rta_attr
+            else:
+                at = t_rta6_attr
         elif \
             t <= RTM_GETNEIGH:
             r["type"] = "neigh"

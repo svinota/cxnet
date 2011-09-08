@@ -14,7 +14,6 @@
           'gateway': '192.168.40.1',
           'output_link': 2L,
           'src_len': 0,
-          't': 254,
           'table': 254L,
           'timestamp': 'Thu Aug 18 14:12:05 2011',
           'type': 'route'}]
@@ -44,7 +43,7 @@ assert (2,5) <= sys.version_info
 from cxnet.common import NotImplemented
 from cxnet.netlink.core import NLM_F_DUMP, NLM_F_REQUEST, NLM_F_ACK, NLM_F_CREATE, NLM_F_EXCL, NLM_F_MULTI, NLMSG_DONE
 from cxnet.netlink.core import nlmsghdr
-from cxnet.netlink.rtnl import RTNLGRP_IPV4_IFADDR, RTNLGRP_IPV4_ROUTE, RTNLGRP_LINK, RTNLGRP_NEIGH
+from cxnet.netlink.rtnl import RTNLGRP_IPV4_IFADDR, RTNLGRP_IPV4_ROUTE, RTNLGRP_IPV6_IFADDR, RTNLGRP_IPV6_ROUTE, RTNLGRP_LINK, RTNLGRP_NEIGH
 from cxnet.netlink.rtnl import RTM_GETADDR, RTM_GETLINK, RTM_GETNEIGH, RTM_GETROUTE
 from cxnet.netlink.rtnl import rtnl_socket, rtnl_msg_parser, rtnl_msg, ndmsg
 from cxnet.netlink.exceptions import NetlinkError
@@ -78,7 +77,7 @@ class IpRoute2(Thread):
         self.e = poll()
         (self.ctlr,self.ctl) = os.pipe()
         self.socket = None
-        self.mask = RTNLGRP_IPV4_IFADDR | RTNLGRP_IPV4_ROUTE | RTNLGRP_LINK | RTNLGRP_NEIGH
+        self.mask = RTNLGRP_IPV4_IFADDR | RTNLGRP_IPV4_ROUTE | RTNLGRP_IPV6_IFADDR | RTNLGRP_IPV6_ROUTE | RTNLGRP_LINK | RTNLGRP_NEIGH
         self.restart_socket()
         self.e.register(self.ctlr,POLLIN)
         self.e.register(self.socket.fd,POLLIN)
@@ -309,10 +308,10 @@ class IpRoute2(Thread):
         msg = rtnl_msg()
         msg.hdr.type = RTM_GETROUTE
         msg.hdr.flags = NLM_F_DUMP | NLM_F_REQUEST
-        msg.data.route.family = 2
+        msg.data.route.family = 0
         msg.data.route.table = table
         ptr = addressof(msg.data) + sizeof(msg.data.route)
-        return filter(lambda x: x['t'] == table, filter(lambda x: x['type'] == 'route', self.query_nl(msg,ptr - addressof(msg))))
+        return filter(lambda x: x['table'] == table, filter(lambda x: x['type'] == 'route', self.query_nl(msg,ptr - addressof(msg))))
 
     def get_route(self,addr=None,table=254):
         """
