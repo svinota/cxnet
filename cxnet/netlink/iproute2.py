@@ -326,12 +326,22 @@ class IpRoute2(Thread):
 
         ret = self.get_all_routes(table)
         result = {}
+        if addr.count(":") > 0:
+            base = 128
+            family = 10
+        else:
+            base = 32
+            family = 2
         dst = dqn_to_int(addr)
         for i in ret:
-            if ('dst_prefix' in i.keys()) and ('dst_len' in i.keys()):
-                if dqn_to_int(i['dst_prefix']) == get_base(dst,i['dst_len']):
+            if ('dst_prefix' in i.keys()) \
+                and ('dst_len' in i.keys()) \
+                and (i['family'] == family):
+                if dqn_to_int(i['dst_prefix']) == get_base(dst,i['dst_len'],base):
                     result['static'] = i
-            elif ('dst_len' in i.keys()) and ('src_len' in i.keys()):
+            elif ('dst_len' in i.keys()) \
+                and ('src_len' in i.keys()) \
+                and (i['family'] == family):
                 if i['dst_len'] == 0 and i['src_len'] == 0:
                     result['default'] = i
 
