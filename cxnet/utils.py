@@ -276,11 +276,11 @@ def get_mask(st):
 
     return mask
 
-def get_base(ip,mask):
+def get_base(ip,mask,base=32):
     """
     Return network for an ip
     """
-    return ((((1 << mask) - 1) << (32 - mask)) & ip)
+    return ((((1 << mask) - 1) << (base - mask)) & ip)
 
 def ip_range(st):
     """
