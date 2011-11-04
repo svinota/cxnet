@@ -203,17 +203,29 @@ def dqn_to_int(st):
     """
     Convert dotted quad notation to integer
     """
-    st = st.split(".")
-    ###
-    # That is not so elegant as 'for' cycle and
-    # not extensible at all, but that works faster
-    ###
-    return int("%02x%02x%02x%02x" % (int(st[0]),int(st[1]),int(st[2]),int(st[3])),16)
+    if st.count(":") > 0:
+        # IPv6
+        st = st.split(":")
+        #
+        if len(st) < 8:
+            st[st.index(""):st.index("")] = ["0"] * (8 - len(st) + st.count(""))
+            for i in range(st.count("")):
+                st.remove("")
+        ret = 0
+        for i in st:
+            ret = ret << 16
+            ret |= int(i,16)
+        return ret
+    else:
+        # IPv4
+        st = st.split(".")
+        return int("%02x%02x%02x%02x" % (int(st[0]),int(st[1]),int(st[2]),int(st[3])),16)
 
 def int_to_dqn(st):
     """
     Convert integer to dotted quad notation
     """
+    # FIXME: IPv6 support?
     st = "%08x" % (st)
     ###
     # The same issue as for `dqn_to_int()`
