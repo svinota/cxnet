@@ -1884,9 +1884,12 @@ class Zeroconf(object):
             if question.type == _TYPE_PTR:
                 for service in self.services.values():
                     if question.name == service.type:
-                        if out is None:
+                        # FIXME: sometimes we just not in time filling cache
+                        answer = self.cache.get(DNSPointer(service.type, _TYPE_PTR, _CLASS_IN, service.ttl, service.name))
+                        if out is None and answer is not None:
                             out = DNSOutgoing(_FLAGS_QR_RESPONSE | _FLAGS_AA)
-                        out.add_answer(msg, self.cache.get(DNSPointer(service.type, _TYPE_PTR, _CLASS_IN, service.ttl, service.name)))
+                        if answer:
+                            out.add_answer(msg, answer)
             if question.type == _TYPE_AXFR:
                 if question.name in list(self.zones.keys()):
                     if out is None:
