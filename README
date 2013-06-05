@@ -1,32 +1,8 @@
-Python networking library
-=========================
+Obsoleted
+=========
 
-The library is written in pure Python with extensive usage of ctypes
-module, that allows speed-up binary protocol parsing. It uses only
-two C libraries -- glibc and libpcap (optional).
+This library is obsoleted by pyroute2: https://github.com/svinota/pyroute2
 
-    netlink — netlink, the Linux' kernel proto:
-        * core — common definitions
-        * generic — generic netlink(7)
-        * ipq — IPQ, userspace client for iptables -j QUEUE
-        * iproute2 — rtnetlink(7) high-level client, see also ip(8)
-        * rtnl — rtnetlink(7) implementation
+There will be no new fixes and/or commits.
 
-
-The primary home of the project is here:
-    http://projects.radlinux.org/cx
-
-Secondary repos:
-    git://github.com/svinota/cxnet.git
-    git://git.altlinux.org/people/peet/packages/cxnet.git
-
-Maillist
-========
-
-https://groups.google.com/group/connexion-project/
-
-Issues
-======
-
-http://projects.radlinux.org/cx/newticket
-https://github.com/svinota/cxnet/issues
+Rationale: ctypes conflicts with SELinux on production systems like RHEL or SLES.
